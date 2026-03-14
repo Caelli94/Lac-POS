@@ -1,0 +1,13 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\app",
+    "\\app\\[slug]",
+    "\\app\\[slug]\\inventory",
+    "\\app\\[slug]\\inventory\\new",
+    "\\app\\[slug]\\settings",
+    "\\components",
+    "\\components\\ui"
+  ],
+  "PreviewInSolutionExplorer": false
+}

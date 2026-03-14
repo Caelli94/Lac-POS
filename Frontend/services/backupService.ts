@@ -1,0 +1,108 @@
+
+let API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+
+if (typeof window !== 'undefined') {
+    API_URL = API_URL.replace('127.0.0.1', 'localhost');
+}
+
+export interface BackupFile {
+    filename: string;
+    size: string;
+    date: string;
+}
+
+export const backupService = {
+    // List all backups
+    getAll: async (organizationId?: string) => {
+        const headers: any = { 'Content-Type': 'application/json' };
+        if (organizationId) headers['x-organization-id'] = organizationId;
+
+        const res = await fetch(`${API_URL}/backups`, {
+            method: 'GET',
+            headers,
+            credentials: 'include'
+        });
+        if (!res.ok) throw new Error('Error fetching backups');
+        return res.json();
+    },
+
+    // Trigger manual creation
+    create: async (label: string, organizationId?: string) => {
+        const headers: any = {
+            'Content-Type': 'application/json'
+        };
+        if (organizationId) {
+            headers['x-organization-id'] = organizationId;
+        }
+
+        const res = await fetch(`${API_URL}/backups`, {
+            method: 'POST',
+            headers,
+            credentials: 'include',
+            body: JSON.stringify({ label, type: 'manual', organizationId })
+        });
+        if (!res.ok) throw new Error('Error creating backup');
+        return res.json();
+    },
+
+    // Get Download URL
+    getDownloadUrl: (filename: string) => {
+        return `${API_URL}/backups/download/${filename}`;
+    },
+
+    // Download via Blob
+    downloadFile: async (filename: string) => {
+        const res = await fetch(`${API_URL}/backups/download/${filename}`, {
+            method: 'GET',
+            credentials: 'include'
+        });
+
+        if (!res.ok) throw new Error('Download failed');
+
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+    },
+
+    // Restore from file
+    restore: async (file: File) => {
+        const formData = new FormData();
+        formData.append('backup', file);
+
+        const res = await fetch(`${API_URL}/backups/restore`, {
+            method: 'POST',
+            body: formData,
+            credentials: 'include'
+        });
+
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.message || 'Restore failed');
+        }
+        return res.json();
+    },
+
+    // Get Restore History
+    getHistory: async () => {
+        const res = await fetch(`${API_URL}/backups/restore-history`, {
+            credentials: 'include'
+        });
+        if (!res.ok) throw new Error('Failed to fetch history');
+        return res.json();
+    },
+
+    // Get History Details
+    getHistoryDetails: async (id: string) => {
+        const res = await fetch(`${API_URL}/backups/restore-history/${id}`, {
+            credentials: 'include'
+        });
+        if (!res.ok) throw new Error('Failed to fetch details');
+        return res.json();
+    }
+};
