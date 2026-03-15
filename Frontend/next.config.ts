@@ -1,4 +1,4 @@
-﻿import type { NextConfig } from "next";
+import type { NextConfig } from "next";
 
 /**
  * ACLARACIÓN: Configuración de Next.js.
@@ -17,10 +17,11 @@ const nextConfig: NextConfig = {
         ],
     },
     async rewrites() {
+        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3001/api';
         return [
             {
                 source: '/api/:path*',
-                destination: 'http://127.0.0.1:3001/api/:path*',
+                destination: `${backendUrl}/:path*`, // Proxy a Backend
             },
         ];
     },
