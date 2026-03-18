@@ -335,7 +335,7 @@ export const createSale = async (req: Request, res: Response) => {
 
         // --- CALCULATE COMMISSION ---
         let commissionAmount = 0;
-        const seller = await User.findById((req as any).user._id).session(session);
+        const seller = await User.findById(sale[0].performed_by).session(session);
         if (seller && seller.roleId) {
             const sellerRole = await Role.findById(seller.roleId).session(session);
             if (sellerRole && sellerRole.commission_info && sellerRole.commission_info.is_enabled) {

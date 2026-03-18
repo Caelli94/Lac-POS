@@ -384,11 +384,12 @@ export const getRegisterMovements = async (req: Request, res: Response) => {
         })
             .populate('customer', 'name')
             .populate('supplier', 'name')
-            .populate('createdBy', 'name role')
+            .populate({
+                path: 'createdBy',
+                select: 'name role roleId',
+                populate: { path: 'roleId', select: 'name' }
+            })
             .sort({ date: -1 });
-
-
-
 
         const register = await CashRegister.findById(id);
         if (!register) return res.status(404).json({ message: 'Register not found' });
@@ -417,12 +418,34 @@ export const getRegisterMovements = async (req: Request, res: Response) => {
                     localField: 'performed_by',
                     foreignField: '_id',
                     pipeline: [
-                        { $project: { name: 1, role: 1 } }
+                        { $project: { name: 1, role: 1, roleId: 1 } }
                     ],
                     as: 'performer'
                 }
             },
             { $unwind: { path: '$performer', preserveNullAndEmptyArrays: true } },
+            {
+                $lookup: {
+                    from: 'roles',
+                    localField: 'performer.roleId',
+                    foreignField: '_id',
+                    pipeline: [
+                        { $project: { name: 1 } }
+                    ],
+                    as: 'performerRole'
+                }
+            },
+            { $unwind: { path: '$performerRole', preserveNullAndEmptyArrays: true } },
+            {
+                $addFields: {
+                    'performer.roleId': '$performerRole'
+                }
+            },
+            {
+                $project: {
+                    performerRole: 0
+                }
+            },
             {
                 $lookup: {
                     from: 'saleitems',

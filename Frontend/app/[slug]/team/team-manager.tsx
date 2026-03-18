@@ -169,8 +169,9 @@ export function TeamManager({ orgId, currentUserId, userRole, permissions, featu
     const fetchUserCommissions = async (userId: string) => {
         setLoadingCommissions(true);
         try {
-            const res = await fetch(`/api/sales/commissions/${userId}`, {
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+            const res = await fetch(`${baseUrl}/sales/commissions/${userId}`, {
+                credentials: 'include'
             });
             if (!res.ok) throw new Error('Error fetching');
             const data = await res.json();

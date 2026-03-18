@@ -12,6 +12,7 @@
     },
     "exclude": [
         "debug-session.ts",
-        "assignOrgScript.ts"
+        "assignOrgScript.ts",
+        "seed99.ts"
     ]
 }

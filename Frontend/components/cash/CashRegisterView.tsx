@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import React, { useState, useMemo, useTransition, useEffect, useRef } from 'react'
 
@@ -890,9 +890,9 @@ export default function CashRegisterView({
                                                                     <span className="text-[10px] font-bold text-slate-700 uppercase px-2 py-1 bg-slate-100 rounded-md border border-slate-200">
                                                                         {mov.type === 'Venta' ? (mov.performer?.name || 'S/D') : (mov.performer?.name || mov.performer || 'Sistema')}
                                                                     </span>
-                                                                    {mov.performer?.role && (
+                                                                    {(mov.performer?.roleId?.name || mov.performer?.role) && (
                                                                         <span className="text-[9px] font-black text-slate-400 uppercase mt-0.5 italic tracking-widest">
-                                                                            {mov.performer.role === 'admin' ? 'Administrador' : mov.performer.role}
+                                                                            {mov.performer.roleId?.name || (mov.performer.role === 'admin' ? 'Administrador' : mov.performer.role)}
                                                                         </span>
                                                                     )}
                                                                 </div>

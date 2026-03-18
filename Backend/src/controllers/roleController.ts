@@ -60,7 +60,12 @@ export const updateRole = async (req: Request, res: Response) => {
         role.allowSuperAdmin = typeof allowSuperAdmin !== 'undefined' ? allowSuperAdmin : role.allowSuperAdmin;
         
         if (commission_info) {
-            role.commission_info = commission_info;
+            role.commission_info = {
+                is_enabled: !!commission_info.is_enabled,
+                type: commission_info.type || 'net',
+                percentage: parseFloat(commission_info.percentage) || 0
+            };
+            role.markModified('commission_info');
         }
 
         const updatedRole = await role.save();
