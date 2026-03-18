@@ -1,4 +1,4 @@
-﻿import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { SidebarLayout } from './components/sidebar-layout'
 import { organizationService } from '@/services/organizationService'
 import { getServerUser } from '@/lib/server-auth';
@@ -64,9 +64,9 @@ export default async function TenantLayout({ children, params }: Props) {
     // SECURITY: Validate User Membership
     const user = await getServerUser();
 
-    // If no user, Middleware should have caught it, but double check
+    // If no user (e.g. Session Expired or Mismatch DB token)
     if (!user) {
-        return notFound();
+        redirect('/login?expired=true');
     }
 
     const userOrgId = String(user.organization?._id || user.organization || '').toLowerCase();

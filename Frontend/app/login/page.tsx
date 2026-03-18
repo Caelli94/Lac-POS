@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { authService } from '@/services/authService';
@@ -22,6 +22,16 @@ export default function LoginPage() {
     // 2FA State
     const [require2FA, setRequire2FA] = useState(false);
     const [tempToken, setTempToken] = useState('');
+
+    useEffect(() => {
+        // Auto-logout for expired sessions to destroy orphan cookies
+        if (typeof window !== 'undefined' && window.location.search.includes('expired=true')) {
+            authService.logout().then(() => {
+                toast.error("Sesión Expirada", { description: "Su sesión fue iniciada en otro dispositivo o ha caducado. Por favor, vuelva a ingresar." });
+                router.replace('/login');
+            });
+        }
+    }, [router]);
 
     const processLoginSuccess = (response: any) => {
         // Session Warning (Single Session Enforcement)

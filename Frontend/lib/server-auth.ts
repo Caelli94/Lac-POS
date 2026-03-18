@@ -16,8 +16,13 @@ export async function getServerUser() {
             cache: 'no-store'
         });
 
-        if (!res.ok) return null;
-        return await res.json();
+        if (!res.ok) {
+            console.error("[getServerUser SSR Error] Status:", res.status, "Url:", `${API_URL}/auth/me`);
+            return null;
+        }
+        const data = await res.json();
+        // Omitimos logear DB gigante
+        return data;
     } catch (error) {
         console.error("Error fetching server user", error);
         return null;

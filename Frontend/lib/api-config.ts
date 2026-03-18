@@ -2,7 +2,7 @@
 // Si no empieza con http, forzamos la ruta absoluta del backend local.
 const serverSideUrl = process.env.NEXT_PUBLIC_API_URL?.startsWith('http')
     ? process.env.NEXT_PUBLIC_API_URL
-    : (process.env.INTERNAL_API_URL || 'http://127.0.0.1:3001/api');
+    : (process.env.INTERNAL_API_URL || 'http://localhost:3001/api');
 
 export const API_URL = typeof window === 'undefined'
     ? serverSideUrl

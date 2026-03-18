@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { LayoutDashboard, Building, Settings, LogOut, Loader2, ShieldCheck, Banknote } from "lucide-react";
@@ -19,9 +19,13 @@ export default function AdminLayout({
         const verifyAdmin = async () => {
             try {
                 const user = await authService.getMe();
-                if (!user || user.role !== 'superadmin') {
+                if (!user) {
+                    router.push('/login?expired=true');
+                    return;
+                }
+                if (user.role !== 'superadmin') {
                     toast.error("Acceso denegado: Se requieren permisos de Super Admin.");
-                    router.push('/'); // Or /login
+                    router.push('/');
                 }
             } catch (error) {
                 router.push('/login');

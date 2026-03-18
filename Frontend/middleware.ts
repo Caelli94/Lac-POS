@@ -12,8 +12,8 @@ export function middleware(request: NextRequest) {
 
     // Excepción: Login y Register
     if (request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/register')) {
-        // Si ya tiene token, lo mandamos al home para que decida (o el layout lo redirija)
-        if (token) {
+        // Si ya tiene token y NO viene por expiración forzada, redirigir
+        if (token && !request.nextUrl.searchParams.has('expired')) {
             return NextResponse.redirect(new URL('/', request.url))
         }
         return NextResponse.next()
