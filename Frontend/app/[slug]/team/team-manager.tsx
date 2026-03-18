@@ -11,6 +11,11 @@ export interface IRole {
     permissions: IPermission[];
     isSystem?: boolean;
     allowSuperAdmin?: boolean; // Can manage/delegate audits
+    commission_info?: {
+        is_enabled: boolean;
+        type: 'gross' | 'net';
+        percentage: number;
+    };
 }
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -54,7 +59,7 @@ import {
     Search, Filter, User, Check, Settings, ShieldCheck, Lock, Eye, Save,
     ShoppingCart, Package, UserCircle, Truck, FileChartColumnIncreasing,
     Banknote, History, Receipt, Zap, CheckCircle2, MoreHorizontal, Mail,
-    ShieldAlert, Globe, ChartBar, ArrowLeftRight, Palette, Blocks, Plus, X, BookOpen, CalendarDays, LayoutDashboard, Landmark, Bot
+    ShieldAlert, Globe, ChartBar, ArrowLeftRight, Palette, Blocks, Plus, X, BookOpen, CalendarDays, LayoutDashboard, Landmark, Bot, Percent
 } from "lucide-react"
 import { toast } from 'sonner'
 import { cn } from "@/lib/utils"
@@ -154,6 +159,34 @@ export function TeamManager({ orgId, currentUserId, userRole, permissions, featu
     const [searchTerm, setSearchTerm] = useState('')
     const [roleFilter, setRoleFilter] = useState('ALL')
     const [activeTab, setActiveTab] = useState('members')
+
+    // Commission State
+    const [isCommissionModalOpen, setIsCommissionModalOpen] = useState(false)
+    const [selectedCommissionUser, setSelectedCommissionUser] = useState<any>(null)
+    const [userCommissions, setUserCommissions] = useState<any[]>([])
+    const [loadingCommissions, setLoadingCommissions] = useState(false)
+
+    const fetchUserCommissions = async (userId: string) => {
+        setLoadingCommissions(true);
+        try {
+            const res = await fetch(`/api/sales/commissions/${userId}`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            if (!res.ok) throw new Error('Error fetching');
+            const data = await res.json();
+            setUserCommissions(data);
+        } catch (error) {
+            toast.error('Error cargando historial de comisiones');
+        } finally {
+            setLoadingCommissions(false);
+        }
+    }
+
+    const openCommissionHistorial = (user: any) => {
+        setSelectedCommissionUser(user);
+        setIsCommissionModalOpen(true);
+        fetchUserCommissions(user._id);
+    }
 
     // Data Fetching
     const fetchTeam = async () => {
@@ -357,7 +390,12 @@ export function TeamManager({ orgId, currentUserId, userRole, permissions, featu
             name: '',
             organization: orgId,
             permissions: defaultPermissions,
-            allowSuperAdmin: false
+            allowSuperAdmin: false,
+            commission_info: {
+                is_enabled: false,
+                type: 'gross',
+                percentage: 0
+            }
         })
         setIsRoleDialogOpen(true)
     }
@@ -738,6 +776,25 @@ export function TeamManager({ orgId, currentUserId, userRole, permissions, featu
                                         </TableCell>
                                         <TableCell className="p-4 text-right px-6">
                                             <div className="flex justify-end gap-2">
+                                                {(()=>{
+                                                    const roleId = typeof member.roleId === 'object' ? member.roleId._id : member.roleId;
+                                                    const resolvedRole = roles.find(r => r._id === roleId);
+                                                    const isCommEnabled = member.roleId?.commission_info?.is_enabled || resolvedRole?.commission_info?.is_enabled;
+                                                    if (isCommEnabled) {
+                                                        return (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                title="Historial de Comisiones"
+                                                                onClick={() => openCommissionHistorial(member)}
+                                                                className="h-8 w-8 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 transition-all rounded-lg"
+                                                            >
+                                                                <Percent size={16} />
+                                                            </Button>
+                                                        )
+                                                    }
+                                                    return null;
+                                                })()}
                                                 {canEdit('team') && (
                                                     <Button
                                                         variant="ghost"
@@ -906,6 +963,54 @@ export function TeamManager({ orgId, currentUserId, userRole, permissions, featu
                                             )}
 
                                         </div>
+                                    </div>
+
+                                    {/* COMISIONES POR VENTA */}
+                                    <div className="flex flex-col gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                                        <div className="flex justify-between items-center">
+                                            <div>
+                                                <Label className="text-sm font-black uppercase text-slate-900 tracking-tight flex items-center gap-2">
+                                                    <Percent size={16} className="text-emerald-500" />
+                                                    Comisiones por Venta
+                                                </Label>
+                                                <p className="text-[10px] uppercase text-slate-400 font-bold tracking-wide mt-1">
+                                                    Configura si los usuarios con este rol ganan comisión y cómo se calcula.
+                                                </p>
+                                            </div>
+                                            <Switch
+                                                checked={editingRole?.commission_info?.is_enabled || false}
+                                                onCheckedChange={(c) => setEditingRole(prev => prev ? { ...prev, commission_info: { ...(prev.commission_info || { type: 'gross', percentage: 0 }), is_enabled: !!c } } : null)}
+                                            />
+                                        </div>
+
+                                        {editingRole?.commission_info?.is_enabled && (
+                                            <div className="grid grid-cols-2 gap-6 pt-4 border-t border-slate-100">
+                                                <div className="space-y-3">
+                                                    <Label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Base de Cálculo</Label>
+                                                    <Select
+                                                        value={editingRole?.commission_info?.type || 'gross'}
+                                                        onValueChange={(val: 'gross' | 'net') => setEditingRole(prev => prev ? { ...prev, commission_info: { ...(prev.commission_info || { is_enabled: true, percentage: 0 }), type: val } } : null)}
+                                                    >
+                                                        <SelectTrigger className="h-12 rounded-xl text-xs font-bold uppercase bg-slate-50 hover:bg-slate-100 focus:ring-0 border-slate-200">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="gross" className="text-xs uppercase font-bold text-slate-700">G. Bruta (Total Ticket)</SelectItem>
+                                                            <SelectItem value="net" className="text-xs uppercase font-bold text-slate-700">G. Neta (Total - Costos)</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                <div className="space-y-3">
+                                                    <Label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Porcentaje (%)</Label>
+                                                    <Input
+                                                        type="number"
+                                                        value={editingRole?.commission_info?.percentage || 0}
+                                                        onChange={(e) => setEditingRole(prev => prev ? { ...prev, commission_info: { ...(prev.commission_info || { is_enabled: true, type: 'gross' }), percentage: parseFloat(e.target.value) || 0 } } : null)}
+                                                        className="h-12 rounded-xl text-lg font-black bg-slate-50 hover:bg-slate-100 focus:ring-0 border-slate-200"
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
@@ -1212,8 +1317,7 @@ export function TeamManager({ orgId, currentUserId, userRole, permissions, featu
 
 
                 {/* DELETE ALERT DIALOG */}
-                < AlertDialog open={!!deleteId
-                } onOpenChange={(open) => !open && setDeleteId(null)}>
+                < AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
                     <AlertDialogContent className="max-w-[420px] bg-white rounded-[3rem] p-10 border-none shadow-2xl animate-in fade-in zoom-in duration-300">
                         <AlertDialogHeader>
                             <AlertDialogTitle className="text-2xl font-black uppercase tracking-tighter text-center text-slate-900">¿Eliminar Usuario?</AlertDialogTitle>
@@ -1234,6 +1338,100 @@ export function TeamManager({ orgId, currentUserId, userRole, permissions, featu
                         </div>
                     </AlertDialogContent>
                 </AlertDialog >
+
+                {/* COMMISSIONS MODAL */}
+                <Dialog open={isCommissionModalOpen} onOpenChange={setIsCommissionModalOpen}>
+                    <DialogContent className="max-w-3xl bg-white rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden">
+                        <DialogHeader className="bg-slate-50 p-6 border-b border-slate-100">
+                            <DialogTitle className="text-xl font-black uppercase tracking-tight text-slate-900 flex items-center gap-3">
+                                <Percent className="text-emerald-500" size={24} />
+                                Historial de Comisiones
+                            </DialogTitle>
+                            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">
+                                {selectedCommissionUser?.name}
+                            </p>
+                        </DialogHeader>
+                        <div className="p-6 h-[60vh] flex flex-col">
+                            {/* Summary Cards */}
+                            <div className="grid grid-cols-2 gap-4 mb-6 shrink-0">
+                                <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl flex items-center justify-between shadow-sm">
+                                    <div>
+                                        <p className="text-[10px] font-black uppercase text-emerald-600 tracking-widest">Total Acumulado</p>
+                                        <p className="text-2xl font-black text-emerald-700 mt-1">
+                                            ${userCommissions.reduce((acc, curr) => acc + (curr.commission_amount || 0), 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                                        </p>
+                                    </div>
+                                    <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600">
+                                        <Banknote size={24} />
+                                    </div>
+                                </div>
+                                <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl flex items-center justify-between shadow-sm">
+                                    <div>
+                                        <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Ventas con Comisión</p>
+                                        <p className="text-2xl font-black text-slate-700 mt-1">
+                                            {userCommissions.length}
+                                        </p>
+                                    </div>
+                                    <div className="w-12 h-12 bg-slate-200 rounded-xl flex items-center justify-center text-slate-500">
+                                        <Receipt size={24} />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <ScrollArea className="flex-1 pr-4">
+                                {loadingCommissions ? (
+                                    <div className="flex flex-col items-center justify-center py-20 space-y-4">
+                                        <Loader2 className="animate-spin text-emerald-400" size={40} />
+                                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Calculando Comisiones...</p>
+                                    </div>
+                                ) : userCommissions.length === 0 ? (
+                                    <div className="text-center py-20">
+                                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-300 mx-auto border border-slate-100 mb-4">
+                                            <Percent size={32} />
+                                        </div>
+                                        <p className="text-slate-400 font-black uppercase text-xs tracking-widest">
+                                            Sin comisiones registradas
+                                        </p>
+                                        <p className="text-slate-400 text-[10px] mt-2 font-medium">Las comisiones aparecerán aquí una vez que el usuario cierre ventas.</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {userCommissions.map(comm => (
+                                            <div key={comm._id} className="flex justify-between items-center p-4 bg-white border border-slate-200 rounded-2xl shadow-sm hover:border-emerald-200 transition-colors group">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:bg-emerald-100 group-hover:scale-110 transition-all">
+                                                        <Percent size={18} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-black text-slate-900 uppercase">
+                                                            Ticket #{comm.ticket_number?.toString().padStart(5, '0')}
+                                                        </p>
+                                                        <p className="text-[10px] font-bold text-slate-400">
+                                                            {new Date(comm.date).toLocaleString('es-AR')}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-lg font-black text-emerald-600">
+                                                        +${comm.commission_amount?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                                                    </p>
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                                                        Venta Total: ${comm.total?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </ScrollArea>
+                        </div>
+                        <DialogFooter className="p-4 bg-slate-50 border-t border-slate-100">
+                            <Button onClick={() => setIsCommissionModalOpen(false)} variant="outline" className="w-full rounded-2xl font-black uppercase text-xs h-14 bg-white hover:bg-slate-100 transition-colors">
+                                Cerrar Historial
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </Tabs >
         </>
     )

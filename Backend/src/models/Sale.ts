@@ -78,6 +78,7 @@ export interface ISale extends Document {
         pto_vta?: number;
         cbte_nro?: number;
     };
+    commission_amount?: number;
     supabase_id?: string;
 
     // Integraciones Externas
@@ -131,6 +132,7 @@ const SaleSchema: Schema = new Schema({
         pto_vta: { type: Number },
         cbte_nro: { type: Number }
     },
+    commission_amount: { type: Number, default: 0 },
     supabase_id: { type: String, unique: true, sparse: true },
 
     // Integraciones Externas

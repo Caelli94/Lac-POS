@@ -7,6 +7,8 @@ import { AccountMovement } from '../models/AccountMovement';
 import { StockLot } from '../models/StockLot';
 import mongoose from 'mongoose';
 import { IntegrationService } from '../services/IntegrationService';
+import { User } from '../models/User';
+import { Role } from '../models/Role';
 
 const areOrgsEqual = (orgA: any, orgB: any): boolean => {
     if (!orgA || !orgB) return false;
@@ -96,6 +98,7 @@ export const createSale = async (req: Request, res: Response) => {
         productsFound.forEach(p => productsMap.set(p._id.toString(), p));
 
         let recalculatedTotal = 0;
+        let totalCost = 0;
 
         for (const item of cart) {
             // Fetch Product from Map (Pre-fetched)
@@ -129,6 +132,7 @@ export const createSale = async (req: Request, res: Response) => {
 
             // Recalculate Total
             recalculatedTotal += item.price * item.quantity;
+            totalCost += (product.cost || 0) * item.quantity;
 
             // Create Sale Item
             await SaleItem.create([{
@@ -327,6 +331,29 @@ export const createSale = async (req: Request, res: Response) => {
                 // Handle CASH / CREDIT_CARD / TRANSFER / etc.
                 // No explicit CashMovement needed as Sales are aggregated directly in the Cash View.
             }
+        }
+
+        // --- CALCULATE COMMISSION ---
+        let commissionAmount = 0;
+        const seller = await User.findById((req as any).user._id).session(session);
+        if (seller && seller.roleId) {
+            const sellerRole = await Role.findById(seller.roleId).session(session);
+            if (sellerRole && sellerRole.commission_info && sellerRole.commission_info.is_enabled) {
+                const commType = sellerRole.commission_info.type;
+                const commPct = sellerRole.commission_info.percentage / 100;
+                
+                if (commType === 'net') {
+                    const netProfit = totalAmount - totalCost;
+                    if (netProfit > 0) commissionAmount = netProfit * commPct;
+                } else {
+                    commissionAmount = totalAmount * commPct;
+                }
+            }
+        }
+
+        if (commissionAmount > 0) {
+            sale[0].commission_amount = parseFloat(commissionAmount.toFixed(2));
+            await sale[0].save({ session });
         }
 
         await session.commitTransaction();
@@ -706,6 +733,29 @@ export const getSaleById = async (req: Request, res: Response) => {
         });
     } catch (error) {
         console.error("Error fetching sale:", error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// @desc    Get commissions for a specific user
+// @route   GET /api/sales/commissions/:userId
+export const getUserCommissions = async (req: Request, res: Response) => {
+    try {
+        const { userId } = req.params;
+        const orgId = (req as any).user.organization;
+
+        const sales = await Sale.find({
+            organization_id: new mongoose.Types.ObjectId(orgId),
+            performed_by: new mongoose.Types.ObjectId(userId),
+            commission_amount: { $gt: 0 },
+            status: 'completed'
+        })
+        .sort({ date: -1 })
+        .populate('customer_id', 'name email');
+
+        res.json(sales);
+    } catch (error) {
+        console.error("Error fetching commissions:", error);
         res.status(500).json({ message: 'Server Error' });
     }
 };

@@ -17,6 +17,11 @@ export interface IRole extends Document {
     permissions: IPermission[];
     isSystem?: boolean;
     allowSuperAdmin?: boolean; // Can manage/delegate audits
+    commission_info?: {
+        is_enabled: boolean;
+        type: 'gross' | 'net'; // gross = sobre total facturado, net = sobre ganancia de productos
+        percentage: number;
+    };
     createdAt: Date;
     updatedAt: Date;
 }
@@ -35,7 +40,12 @@ const RoleSchema: Schema = new Schema({
         }]
     }],
     isSystem: { type: Boolean, default: false },
-    allowSuperAdmin: { type: Boolean, default: false }
+    allowSuperAdmin: { type: Boolean, default: false },
+    commission_info: {
+        is_enabled: { type: Boolean, default: false },
+        type: { type: String, enum: ['gross', 'net'], default: 'net' },
+        percentage: { type: Number, default: 0 }
+    }
 }, {
     timestamps: true
 });

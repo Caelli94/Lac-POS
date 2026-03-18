@@ -20,7 +20,7 @@ export const getRoles = async (req: Request, res: Response) => {
 // @access  Private
 export const createRole = async (req: Request, res: Response) => {
     try {
-        const { name, organization, permissions, allowSuperAdmin } = req.body;
+        const { name, organization, permissions, allowSuperAdmin, commission_info } = req.body;
 
         // Check if role name already exists in org
         const existing = await Role.findOne({ name, organization });
@@ -32,7 +32,8 @@ export const createRole = async (req: Request, res: Response) => {
             name,
             organization,
             permissions,
-            allowSuperAdmin
+            allowSuperAdmin,
+            commission_info
         });
         res.status(201).json(role);
     } catch (error) {
@@ -47,7 +48,7 @@ export const createRole = async (req: Request, res: Response) => {
 export const updateRole = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const { name, permissions, allowSuperAdmin, isAuditAuthorized } = req.body;
+        const { name, permissions, allowSuperAdmin, isAuditAuthorized, commission_info } = req.body;
         const role = await Role.findById(id);
 
         if (!role) {
@@ -57,6 +58,10 @@ export const updateRole = async (req: Request, res: Response) => {
         role.name = name || role.name;
         role.permissions = permissions || role.permissions;
         role.allowSuperAdmin = typeof allowSuperAdmin !== 'undefined' ? allowSuperAdmin : role.allowSuperAdmin;
+        
+        if (commission_info) {
+            role.commission_info = commission_info;
+        }
 
         const updatedRole = await role.save();
         res.json(updatedRole);
