@@ -614,7 +614,18 @@ export function CustomerTableManager({ initialCustomers, initialPagination, orgI
                 selectedCustomerForAccount && (
                     <CheckingAccountModal
                         isOpen={isAccountModalOpen}
-                        onClose={() => setIsAccountModalOpen(false)}
+                        onClose={(finalBalance) => {
+                            setIsAccountModalOpen(false);
+                            const lastCustomer = selectedCustomerForAccount;
+                            setSelectedCustomerForAccount(null);
+
+                            // Optimized local update instead of full refresh
+                            if (finalBalance !== undefined && lastCustomer) {
+                                setCustomers(prev => prev.map(c =>
+                                    c.id === lastCustomer.id ? { ...c, credit_balance: finalBalance } : c
+                                ));
+                            }
+                        }}
                         customer={selectedCustomerForAccount}
                         orgId={orgId}
                         account={selectedCustomerForAccount?.account}

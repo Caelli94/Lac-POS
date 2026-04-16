@@ -18,6 +18,9 @@ export interface ICustomer extends Document {
 
     image_url?: string;
     last_modified_by?: mongoose.Types.ObjectId;
+    // Account Statistics
+    total_purchased?: number;
+    last_purchase_date?: Date;
 }
 
 const CustomerSchema: Schema = new Schema({
@@ -39,7 +42,11 @@ const CustomerSchema: Schema = new Schema({
     deletedAt: { type: Date },
 
     image_url: { type: String },
-    last_modified_by: { type: Schema.Types.ObjectId, ref: 'User' }
+    last_modified_by: { type: Schema.Types.ObjectId, ref: 'User' },
+
+    // Statistics & Account Summary
+    total_purchased: { type: Number, default: 0 },
+    last_purchase_date: { type: Date }
 
 }, {
     timestamps: true,

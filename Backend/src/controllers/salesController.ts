@@ -328,10 +328,17 @@ export const createSale = async (req: Request, res: Response) => {
                     account.balance += payment.amount;
                     account.last_debt_date = new Date(); // Reset countdown on new POS purchase
                 }
+                await account.save({ session });
+            }
+        }
 
-            } else {
-                // Handle CASH / CREDIT_CARD / TRANSFER / etc.
-                // No explicit CashMovement needed as Sales are aggregated directly in the Cash View.
+        // 3.5 Update Customer Statistics (Total Purchased & Last Purchase Date)
+        if (customerId && mongoose.Types.ObjectId.isValid(customerId)) {
+            const customer = await mongoose.model('Customer').findById(customerId).session(session);
+            if (customer) {
+                customer.total_purchased = (customer.total_purchased || 0) + totalAmount;
+                customer.last_purchase_date = new Date();
+                await customer.save({ session });
             }
         }
 

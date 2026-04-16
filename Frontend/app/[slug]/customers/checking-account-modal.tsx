@@ -9,7 +9,7 @@ import { Eye, EyeOff } from 'lucide-react'
 
 interface Props {
     isOpen: boolean
-    onClose: () => void
+    onClose: (finalBalance?: number) => void
     customer: any
     orgId: string
     account: any
@@ -45,7 +45,7 @@ export function CheckingAccountModal({ isOpen, onClose, customer, orgId, account
     const [currentBalance, setCurrentBalance] = React.useState(customer.credit_balance || 0);
 
     return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
+        <Dialog open={isOpen} onOpenChange={() => onClose(currentBalance)}>
             <DialogContent className="!max-w-[1200px] w-[95vw] h-[90vh] bg-white border-none p-0 shadow-2xl overflow-hidden flex flex-col rounded-[2rem]">
                 <DialogHeader className="px-10 py-8 bg-slate-50 border-b border-slate-100 flex flex-row items-center justify-between space-y-0 shrink-0">
                     <div className="flex flex-col gap-1">
