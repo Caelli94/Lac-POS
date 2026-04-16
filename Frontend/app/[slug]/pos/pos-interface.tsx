@@ -40,7 +40,7 @@ const generateObjectId = () => {
     return Array.from({ length: 24 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
 }
 
-type Product = { id: string; name: string; price: number; current_stock: number; sku: string | null; variants?: any[]; pricing?: any[]; tax_rate?: number, createdAt?: string, updatedAt?: string }
+type Product = { id: string; _id?: string; name: string; price: number; current_stock: number; sku: string | null; variants?: any[]; pricing?: any[]; tax_rate?: number, createdAt?: string, updatedAt?: string }
 type Customer = { id: string; name: string; tax_id: string | null; has_account: boolean; current_account_active: boolean; surcharge_rate?: number }
 type CartItem = Product & {
     quantity: number,
