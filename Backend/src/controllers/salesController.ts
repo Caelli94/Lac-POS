@@ -9,6 +9,7 @@ import mongoose from 'mongoose';
 import { IntegrationService } from '../services/IntegrationService';
 import { User } from '../models/User';
 import { Role } from '../models/Role';
+import { CommissionService } from '../services/CommissionService';
 
 const areOrgsEqual = (orgA: any, orgB: any): boolean => {
     if (!orgA || !orgB) return false;
@@ -334,25 +335,38 @@ export const createSale = async (req: Request, res: Response) => {
         }
 
         // --- CALCULATE COMMISSION ---
-        let commissionAmount = 0;
+        let totalCommissionAmount = 0;
         const seller = await User.findById(sale[0].performed_by).session(session);
-        if (seller && seller.roleId) {
-            const sellerRole = await Role.findById(seller.roleId).session(session);
-            if (sellerRole && sellerRole.commission_info && sellerRole.commission_info.is_enabled) {
-                const commType = sellerRole.commission_info.type;
-                const commPct = sellerRole.commission_info.percentage / 100;
-                
-                if (commType === 'net') {
-                    const netProfit = totalAmount - totalCost;
-                    if (netProfit > 0) commissionAmount = netProfit * commPct;
-                } else {
-                    commissionAmount = totalAmount * commPct;
-                }
+        
+        if (seller) {
+            // Pick primary payment method for rules (first one)
+            const primaryPaymentMethod = finalPayments.length > 0 ? finalPayments[0].method : 'cash';
+
+            for (const item of cart) {
+                const product = productsMap.get(item.id);
+                const itemPrice = item.price * item.quantity;
+                const itemCost = (product?.cost || 0) * item.quantity;
+                const itemNetProfit = itemPrice - itemCost;
+
+                const itemCommission = await CommissionService.calculateCommission(
+                    orgId.toString(),
+                    seller._id.toString(),
+                    {
+                        roleId: seller.roleId?.toString(),
+                        categoryId: product?.category_ids && product.category_ids.length > 0 ? product.category_ids[0].toString() : undefined,
+                        paymentMethod: primaryPaymentMethod,
+                        priceListId: item.priceListId // Assumes frontend sends this if applicable
+                    },
+                    itemPrice,
+                    itemNetProfit
+                );
+
+                totalCommissionAmount += itemCommission;
             }
         }
 
-        if (commissionAmount > 0) {
-            sale[0].commission_amount = parseFloat(commissionAmount.toFixed(2));
+        if (totalCommissionAmount > 0) {
+            sale[0].commission_amount = parseFloat(totalCommissionAmount.toFixed(2));
             await sale[0].save({ session });
         }
 

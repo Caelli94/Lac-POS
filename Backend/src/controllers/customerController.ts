@@ -45,8 +45,9 @@ export const getCustomers = async (req: Request, res: Response) => {
         const debtFilter = (req.query.debtFilter as string) || 'all'; // all, debtor, non_debtor
 
         // 1. Base Match (Customer Fields)
+        const orgObjectId = new mongoose.Types.ObjectId(orgId);
         const matchStage: any = {
-            organization_id: { $in: [new mongoose.Types.ObjectId(orgId), orgId] },
+            organization_id: orgObjectId,
             deleted: { $ne: true }
         };
 
@@ -120,7 +121,10 @@ export const getCustomers = async (req: Request, res: Response) => {
                         {
                             $project: {
                                 account: 0,
-                                __v: 0
+                                __v: 0,
+                                deleted: 0,
+                                deletedAt: 0,
+                                organization_id: 0
                             }
                         }
                     ]

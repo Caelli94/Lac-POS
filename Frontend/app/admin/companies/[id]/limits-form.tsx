@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { updateSettingsAction } from "./actions"
 import { toast } from "sonner"
-import { Users, Package, Truck, Contact } from "lucide-react"
+import { Users, Package, Truck, Contact, MapPin, Tags, Calculator } from "lucide-react"
 
 interface Props {
     orgId: string
@@ -25,6 +25,9 @@ export function LimitsForm({ orgId, settings }: Props) {
                 products_limit: Number(formData.get('products_limit')),
                 suppliers_limit: Number(formData.get('suppliers_limit')),
                 customers_limit: Number(formData.get('customers_limit')),
+                price_lists_limit: Number(formData.get('price_lists_limit')),
+                branches_limit: Number(formData.get('branches_limit')),
+                pos_limit: Number(formData.get('pos_limit')),
             }
 
             try {
@@ -108,6 +111,54 @@ export function LimitsForm({ orgId, settings }: Props) {
                                 min="-1"
                             />
                             <p className="text-[10px] text-slate-400">Cartera máxima de clientes</p>
+                        </div>
+
+                        {/* SUCURSALES */}
+                        <div className="space-y-2">
+                            <Label htmlFor="branches_limit" className="flex items-center gap-2">
+                                <MapPin size={16} className="text-slate-500" />
+                                Límite de Sucursales
+                            </Label>
+                            <Input
+                                id="branches_limit"
+                                name="branches_limit"
+                                type="number"
+                                defaultValue={settings?.branches_limit ?? 1}
+                                min="-1"
+                            />
+                            <p className="text-[10px] text-slate-400">Cantidad máxima de sucursales permitidas</p>
+                        </div>
+
+                        {/* PUNTOS DE VENTA (CAJAS) */}
+                        <div className="space-y-2">
+                            <Label htmlFor="pos_limit" className="flex items-center gap-2">
+                                <Calculator size={16} className="text-slate-500" />
+                                Límite de Puntos de Venta (Cajas)
+                            </Label>
+                            <Input
+                                id="pos_limit"
+                                name="pos_limit"
+                                type="number"
+                                defaultValue={settings?.pos_limit ?? 1}
+                                min="-1"
+                            />
+                            <p className="text-[10px] text-slate-400">Cantidad máxima de cajas/puntos de venta</p>
+                        </div>
+
+                        {/* LISTAS DE PRECIOS */}
+                        <div className="space-y-2">
+                            <Label htmlFor="price_lists_limit" className="flex items-center gap-2">
+                                <Tags size={16} className="text-slate-500" />
+                                Límite de Listas de Precios
+                            </Label>
+                            <Input
+                                id="price_lists_limit"
+                                name="price_lists_limit"
+                                type="number"
+                                defaultValue={settings?.price_lists_limit ?? 5}
+                                min="-1"
+                            />
+                            <p className="text-[10px] text-slate-400">Cantidad máxima de listas de precios</p>
                         </div>
 
                     </div>

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import {
@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
 import { upsertBranchAction, deleteBranchAction } from "./actions";
+import { LimitReachedModal } from "@/components/limit-reached-modal";
 
 /**
  * BranchManager:
@@ -39,6 +40,10 @@ export function BranchManager({ branches: initialBranches = [], orgId }: { branc
     const [newBranch, setNewBranch] = useState({
         name: "", location: "", address: "", phone: "", manager: "", opening_hours: ""
     });
+
+    // Limit Modal State
+    const [showLimitModal, setShowLimitModal] = useState(false)
+    const [limitType, setLimitType] = useState<'branches'>('branches')
 
     /**
      * Sincronización de datos:
@@ -66,7 +71,12 @@ export function BranchManager({ branches: initialBranches = [], orgId }: { branc
                 setNewBranch({ name: "", location: "", address: "", phone: "", manager: "", opening_hours: "" });
                 router.refresh();
             } else {
-                toast.error("Error del servidor: " + res.error);
+                if (res.error?.includes('LIMIT_REACHED')) {
+                    setLimitType('branches');
+                    setShowLimitModal(true);
+                } else {
+                    toast.error("Error del servidor: " + res.error);
+                }
             }
         } catch (error) {
             toast.error("Error inesperado en la conexión.");
@@ -99,6 +109,7 @@ export function BranchManager({ branches: initialBranches = [], orgId }: { branc
 
     return (
         <div className="space-y-6">
+            <LimitReachedModal isOpen={showLimitModal} onClose={() => setShowLimitModal(false)} limitType={limitType} />
             {/* CABECERA */}
             <div className="flex justify-between items-center px-2">
                 <div>

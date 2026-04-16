@@ -11,7 +11,7 @@ export interface ICustomerAccount extends Document {
 }
 
 const CustomerAccountSchema: Schema = new Schema({
-    organization_id: { type: Schema.Types.Mixed, required: true, index: true },
+    organization_id: { type: Schema.Types.ObjectId, required: true, index: true },
     customer_id: { type: Schema.Types.ObjectId, ref: 'Customer', required: true, unique: true },
     balance: { type: Number, default: 0 },
     credit_limit: { type: Number, default: 0 },

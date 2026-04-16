@@ -1,4 +1,4 @@
-﻿
+
 import { organizationService } from '@/services/organizationService'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -67,6 +67,8 @@ export default async function CompanyDetailsPage({ params, searchParams }: Props
         { code: 'import-export', name: 'Importar/Exportar', description: 'Importación masiva y exportación de datos' },
         { code: 'web-page', name: 'Página Web', description: 'Configuración de sitio web' },
         { code: 'team', name: 'Equipo', description: 'Gestión de usuarios y roles' },
+        { code: 'commissions', name: 'Comisiones', description: 'Reglas de venta básicas por rol' },
+        { code: 'advanced_commissions', name: 'Comisiones Avanzadas', description: 'Reglas dinámicas, categorías, listas de precios e incentivos escala' },
         { code: 'personalization', name: 'Personalización', description: 'Personalizar apariencia' },
         { code: 'integrations', name: 'Integraciones', description: 'Conectar servicios externos' },
         { code: '2fa', name: 'Seguridad', description: 'Seguridad de doble factor para usuarios' },

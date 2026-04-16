@@ -19,7 +19,7 @@ const SaleItem = SaleModels.SaleItem;
 
 const SUPABASE_URL = process.env.MIGRATION_SUPABASE_URL || 'https://hktxfhbeiyrddxpmipir.supabase.co';
 const SUPABASE_KEY = process.env.MIGRATION_SUPABASE_KEY;
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://LuchinCaelli:4631911-Lac3762@cluster0.yyzeliw.mongodb.net/mi_sistema_saas?appName=Cluster0";
+const MONGO_URI = process.env.MONGO_URI;
 
 if (!SUPABASE_KEY) {
     console.error('❌ Falta MIGRATION_SUPABASE_KEY');

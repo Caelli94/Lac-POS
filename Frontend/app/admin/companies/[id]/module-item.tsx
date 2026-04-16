@@ -70,11 +70,17 @@ const MODULE_ICONS: Record<string, any> = {
     '2fa': ShieldCheck,
     appointments: CalendarDays,
     checks: Landmark,
-    ai_assistant: Bot
+    ai_assistant: Bot,
+    commissions: Banknote
 }
 
 // Define modules that have sub-tabs
 const MODULE_TABS: Record<string, { id: string, name: string }[]> = {
+    commissions: [
+        { id: 'history', name: 'Historial' },
+        { id: 'rules', name: 'Reglas de Venta' },
+        { id: 'payments', name: 'Pagos' },
+    ],
     settings: [
         { id: 'general', name: 'Información General' },
         { id: 'tickets', name: 'Ticket' },

@@ -15,7 +15,7 @@ import { Phone, ArrowUpCircle } from "lucide-react"
 interface LimitReachedModalProps {
     isOpen: boolean
     onClose: () => void
-    limitType?: 'users' | 'products' | 'suppliers' | 'customers' | 'generic'
+    limitType?: 'users' | 'products' | 'suppliers' | 'customers' | 'branches' | 'price_lists' | 'pos' | 'generic'
 }
 
 export function LimitReachedModal({ isOpen, onClose, limitType = 'generic' }: LimitReachedModalProps) {
@@ -26,6 +26,9 @@ export function LimitReachedModal({ isOpen, onClose, limitType = 'generic' }: Li
             case 'products': return "Ha alcanzado el límite de productos que puede registrar.";
             case 'suppliers': return "Ha alcanzado el límite de proveedores en su cartera.";
             case 'customers': return "Ha alcanzado el límite de clientes en su cartera.";
+            case 'branches': return "Ha alcanzado el límite de sucursales permitidas.";
+            case 'price_lists': return "Ha alcanzado el límite de listas de precios que puede crear.";
+            case 'pos': return "Ha alcanzado el límite de puntos de venta (cajas) permitidos.";
             default: return "Ha alcanzado un límite operativo de su plan.";
         }
     }

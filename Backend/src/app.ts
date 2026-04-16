@@ -45,6 +45,7 @@ import appointmentRoutes from './routes/appointmentRoutes';
 import checkRoutes from './routes/checkRoutes';
 import chatbotRoutes from './routes/chatbotRoutes';
 import integrationRoutes from './routes/integrationRoutes';
+import commissionRoutes from './routes/commissionRoutes';
 
 app.get('/', (req, res) => {
     res.send('API is running...');
@@ -74,6 +75,7 @@ app.use('/api/appointments', appointmentRoutes);
 app.use('/api/checks', checkRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/integrations', integrationRoutes);
+app.use('/api/commissions', commissionRoutes);
 
 
 

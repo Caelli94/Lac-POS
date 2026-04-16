@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import React from 'react'
 import Link from 'next/link'
@@ -317,6 +317,16 @@ export function TenantSidebar({ slug, orgName, userName, userRole, rolePermissio
                             icon={<Users size={20} />}
                             label="Equipo"
                             active={isActive(`/${slug}/team`)}
+                            isCollapsed={isCollapsed}
+                        />
+                    )}
+
+                    {canView('commissions') && (
+                        <SidebarLink
+                            href={`/${slug}/commissions`}
+                            icon={<Banknote size={20} />}
+                            label="Comisiones"
+                            active={isActive(`/${slug}/commissions`)}
                             isCollapsed={isCollapsed}
                         />
                     )}

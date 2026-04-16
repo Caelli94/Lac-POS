@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import { Branch } from '../models/Branch';
+import { Organization } from '../models/Organization';
+import mongoose from 'mongoose';
 
 // @desc    Get all branches for an organization
 // @route   GET /api/branches/:orgId
@@ -34,6 +36,14 @@ export const upsertBranch = async (req: Request, res: Response) => {
         if (id) {
             branch = await Branch.findByIdAndUpdate(id, data, { new: true });
         } else {
+            // CHECK LIMITS
+            const org = await Organization.findById(organization_id);
+            if (org?.settings?.branches_limit !== undefined && org.settings.branches_limit !== -1) {
+                const currentCount = await Branch.countDocuments({ organization_id });
+                if (currentCount >= org.settings.branches_limit) {
+                    return res.status(403).json({ message: 'LIMIT_REACHED_BRANCHES' });
+                }
+            }
             branch = await Branch.create({ organization_id, ...data });
         }
 

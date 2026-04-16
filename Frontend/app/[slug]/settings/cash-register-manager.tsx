@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { cashService } from "@/services/cashService";
 import { setTerminalCookie } from "./actions";
+import { LimitReachedModal } from "@/components/limit-reached-modal";
 
 export function CashRegisterManager({ registers: initialRegisters = [], branches = [], orgId, currentTerminalId }: { registers: any[], branches: any[], orgId: string, currentTerminalId?: string }) {
     const [registers, setRegisters] = useState(initialRegisters);
@@ -38,6 +39,10 @@ export function CashRegisterManager({ registers: initialRegisters = [], branches
     const [newRegister, setNewRegister] = useState({
         name: "", branch_id: "null"
     });
+
+    // Limit Modal State
+    const [showLimitModal, setShowLimitModal] = useState(false)
+    const [limitType, setLimitType] = useState<'pos'>('pos')
 
     useEffect(() => {
         setRegisters(initialRegisters);
@@ -77,7 +82,12 @@ export function CashRegisterManager({ registers: initialRegisters = [], branches
                 setNewRegister({ name: "", branch_id: "null" });
                 router.refresh();
             } else {
-                toast.error("Error del servidor: " + res.error);
+                if (res.error?.includes('LIMIT_REACHED')) {
+                    setLimitType('pos');
+                    setShowLimitModal(true);
+                } else {
+                    toast.error("Error del servidor: " + res.error);
+                }
             }
         } catch (error) {
             toast.error("Error inesperado.");
@@ -115,6 +125,7 @@ export function CashRegisterManager({ registers: initialRegisters = [], branches
 
     return (
         <div className="space-y-6">
+            <LimitReachedModal isOpen={showLimitModal} onClose={() => setShowLimitModal(false)} limitType={limitType} />
             {/* CABECERA */}
             <div className="flex justify-between items-center px-2">
                 <div>

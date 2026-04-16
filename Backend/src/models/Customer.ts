@@ -21,7 +21,7 @@ export interface ICustomer extends Document {
 }
 
 const CustomerSchema: Schema = new Schema({
-    organization_id: { type: Schema.Types.Mixed, required: true },
+    organization_id: { type: Schema.Types.ObjectId, required: true, index: true },
     code: { type: String },
     name: { type: String, required: true },
     doc_type: { type: String, default: 'DNI' },

@@ -103,6 +103,9 @@ export interface IOrganization extends Document {
         products_limit?: number;
         suppliers_limit?: number;
         customers_limit?: number;
+        price_lists_limit?: number;
+        branches_limit?: number;
+        pos_limit?: number;
         ai?: {
             max_messages_per_hour?: number;
             daily_limit?: number;
@@ -135,6 +138,8 @@ export interface IOrganization extends Document {
         tax_condition?: string;
     };
     ai_assistant_enabled?: boolean;
+    commissions_enabled?: boolean;
+    advanced_commissions?: boolean;
     integrations_config?: {
         mercadopago?: {
             public_key?: string;
@@ -205,6 +210,9 @@ const OrganizationSchema: Schema = new Schema({
         products_limit: { type: Number, default: 100 },
         suppliers_limit: { type: Number, default: 20 },
         customers_limit: { type: Number, default: 50 },
+        price_lists_limit: { type: Number, default: 5 },
+        branches_limit: { type: Number, default: 1 },
+        pos_limit: { type: Number, default: 1 },
         ai: {
             max_messages_per_hour: { type: Number, default: 50 },
             daily_limit: { type: Number, default: 200 },
@@ -238,6 +246,8 @@ const OrganizationSchema: Schema = new Schema({
         tax_condition: { type: String, default: 'RESPONSABLE INSCRIPTO' }
     },
     ai_assistant_enabled: { type: Boolean, default: false },
+    commissions_enabled: { type: Boolean, default: false },
+    advanced_commissions: { type: Boolean, default: false },
     integrations_config: {
         mercadopago: {
             public_key: String,

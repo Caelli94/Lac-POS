@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import {
@@ -17,6 +17,7 @@ import { Plus, Trash2, Loader2, Tag, Lock, Edit2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogFooter, DialogTitle, DialogHeader } from '@/components/ui/dialog'
+import { LimitReachedModal } from '@/components/limit-reached-modal'
 
 /**
  * PriceListSettings:
@@ -31,6 +32,10 @@ export function PriceListSettings({ orgId }: { orgId: string }) {
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [listToEdit, setListToEdit] = useState<any>(null)
     const [newName, setNewName] = useState('')
+
+    // Limit Modal State
+    const [showLimitModal, setShowLimitModal] = useState(false)
+    const [limitType, setLimitType] = useState<'price_lists'>('price_lists')
 
     const loadLists = async () => {
         setFetching(true)
@@ -77,7 +82,12 @@ export function PriceListSettings({ orgId }: { orgId: string }) {
             setIsDialogOpen(false);
             await loadLists();
         } else {
-            toast.error(res.error || "Error al guardar");
+            if (res.error?.includes('LIMIT_REACHED')) {
+                setLimitType('price_lists');
+                setShowLimitModal(true);
+            } else {
+                toast.error(res.error || "Error al guardar");
+            }
         }
         setLoading(false)
     }
@@ -108,6 +118,7 @@ export function PriceListSettings({ orgId }: { orgId: string }) {
 
     return (
         <div className="space-y-6">
+            <LimitReachedModal isOpen={showLimitModal} onClose={() => setShowLimitModal(false)} limitType={limitType} />
             {/* CABECERA TIPO TOOLBAR */}
             <div className="flex justify-between items-center px-2">
                 <div>

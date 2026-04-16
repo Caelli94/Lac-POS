@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import { PriceList } from '../models/PriceList';
+import { Organization } from '../models/Organization';
+import mongoose from 'mongoose';
 
 // @desc    Get all price lists for an organization
 // @route   GET /api/price-lists/:orgId
@@ -55,6 +57,15 @@ export const upsertPriceList = async (req: Request, res: Response) => {
         // Check duplicates
         const exists = await PriceList.findOne({ organization_id, name });
         if (exists) return res.status(400).json({ message: 'Ya existe una lista con ese nombre' });
+
+        // CHECK LIMITS
+        const org = await Organization.findById(organization_id);
+        if (org?.settings?.price_lists_limit !== undefined && org.settings.price_lists_limit !== -1) {
+            const currentCount = await PriceList.countDocuments({ organization_id });
+            if (currentCount >= org.settings.price_lists_limit) {
+                return res.status(403).json({ message: 'LIMIT_REACHED_PRICELISTS' });
+            }
+        }
 
         const newList = await PriceList.create({
             organization_id,

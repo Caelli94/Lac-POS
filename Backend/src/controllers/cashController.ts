@@ -6,6 +6,7 @@ import { CustomerAccount } from '../models/CustomerAccount';
 import { SupplierAccount } from '../models/SupplierAccount';
 import { SupplierAccountMovement } from '../models/SupplierAccountMovement';
 import { CustomerOrder } from '../models/CustomerOrder';
+import { Organization } from '../models/Organization';
 import mongoose from 'mongoose';
 
 // @desc    Register a new cash movement
@@ -219,6 +220,15 @@ export const upsertRegister = async (req: Request, res: Response) => {
             }, { new: true }).populate('branch_id');
             return res.json(register);
         } else {
+            // CHECK LIMITS
+            const org = await Organization.findById(organization_id);
+            if (org?.settings?.pos_limit !== undefined && org.settings.pos_limit !== -1) {
+                const currentCount = await CashRegister.countDocuments({ organization: organization_id });
+                if (currentCount >= org.settings.pos_limit) {
+                    return res.status(403).json({ message: 'LIMIT_REACHED_POS' });
+                }
+            }
+
             // Create
             const newRegister = await CashRegister.create({
                 organization: organization_id,

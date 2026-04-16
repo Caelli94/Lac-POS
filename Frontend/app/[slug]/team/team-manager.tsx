@@ -87,7 +87,8 @@ const modules = [
     { name: 'Estadísticas', code: 'statistics', id: 'statistics', hasTabs: true, icon: ChartBar },
     { name: 'Importar/Exportar', code: 'import-export', id: 'import-export', hasTabs: true, icon: ArrowLeftRight },
     { name: 'Página Web', code: 'web-page', id: 'web-page', hasTabs: false, icon: Globe },
-    { name: 'Equipo', code: 'team', id: 'team', hasTabs: false, icon: Users },
+    { name: 'Equipo', code: 'team', id: 'team', hasTabs: true, icon: Users },
+    { name: 'Comisiones', code: 'commissions', id: 'commissions', hasTabs: true, icon: Percent },
     { name: 'Personalización', code: 'personalization', id: 'personalization', hasTabs: false, icon: Palette },
     { name: 'Integraciones', code: 'integrations', id: 'integrations', hasTabs: true, icon: Blocks },
     { name: 'Seguridad (2FA)', code: '2fa', id: '2fa', hasTabs: false, icon: ShieldCheck },
@@ -133,6 +134,17 @@ const integrationsTabs = [
     { name: 'Mercado Pago', code: 'mercadopago', id: 'mercadopago' },
     { name: 'Tienda Nube', code: 'tiendanube', id: 'tiendanube' },
     { name: 'Wix', code: 'wix', id: 'wix' }
+];
+
+const commissionTabs = [
+    { name: 'Historial', code: 'history', id: 'history' },
+    { name: 'Reglas de Venta', code: 'rules', id: 'rules' },
+    { name: 'Pagos', code: 'payments', id: 'payments' }
+];
+
+const teamTabs = [
+    { name: 'Miembros', code: 'members', id: 'members' },
+    { name: 'Roles y Permisos', code: 'roles', id: 'roles' }
 ];
 
 
@@ -381,6 +393,8 @@ export function TeamManager({ orgId, currentUserId, userRole, permissions, featu
                     case 'mass-update': return massUpdateTabs.map(t => ({ name: t.id, enabled: false }));
                     case 'inventory': return inventoryTabs.map(t => ({ name: t.id, enabled: false }));
                     case 'integrations': return integrationsTabs.map(t => ({ name: t.id, enabled: false }));
+                    case 'commissions': return commissionTabs.map(t => ({ name: t.id, enabled: false }));
+                    case 'team': return teamTabs.map(t => ({ name: t.id, enabled: false }));
                     case 'ai_assistant': return [];
                     default: return [];
                 }
@@ -431,6 +445,8 @@ export function TeamManager({ orgId, currentUserId, userRole, permissions, featu
                         case 'appointments': validTabs = appointmentTabs; break;
                         case 'checks': validTabs = checkTabs; break;
                         case 'integrations': validTabs = integrationsTabs; break;
+                        case 'commissions': validTabs = commissionTabs; break;
+                        case 'team': validTabs = teamTabs; break;
                         default: validTabs = [];
                     }
 
@@ -488,6 +504,8 @@ export function TeamManager({ orgId, currentUserId, userRole, permissions, featu
                             case 'appointments': return appointmentTabs.map(t => ({ name: t.id, enabled: isAdmin }));
                             case 'checks': return checkTabs.map(t => ({ name: t.id, enabled: isAdmin }));
                             case 'integrations': return integrationsTabs.map(t => ({ name: t.id, enabled: isAdmin }));
+                            case 'commissions': return commissionTabs.map(t => ({ name: t.id, enabled: isAdmin }));
+                            case 'team': return teamTabs.map(t => ({ name: t.id, enabled: isAdmin }));
                             default: return [];
                         }
                     })() : undefined
@@ -552,13 +570,14 @@ export function TeamManager({ orgId, currentUserId, userRole, permissions, featu
         }
     }
 
-    const togglePermission = (moduleIndex: number, field: 'view' | 'edit' | 'delete') => {
+    const togglePermission = (moduleName: string, field: 'view' | 'edit' | 'delete') => {
         if (!editingRole || !editingRole.permissions) return
-        const newPermissions = [...editingRole.permissions]
-        newPermissions[moduleIndex] = {
-            ...newPermissions[moduleIndex],
-            [field]: !newPermissions[moduleIndex][field]
-        }
+        const newPermissions = editingRole.permissions.map(p => {
+            if (p.module === moduleName) {
+                return { ...p, [field]: !p[field] }
+            }
+            return p
+        })
         setEditingRole({ ...editingRole, permissions: newPermissions })
     }
 
@@ -1079,7 +1098,7 @@ export function TeamManager({ orgId, currentUserId, userRole, permissions, featu
                                                                     <Checkbox
                                                                         checked={p?.view || false}
                                                                         disabled={isLocked}
-                                                                        onCheckedChange={() => togglePermission(pIdx, 'view')}
+                                                                        onCheckedChange={() => togglePermission(m.id, 'view')}
                                                                         className="w-6 h-6 rounded-lg data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 disabled:opacity-50"
                                                                     />
                                                                 </div>
@@ -1089,7 +1108,7 @@ export function TeamManager({ orgId, currentUserId, userRole, permissions, featu
                                                                     <Checkbox
                                                                         checked={p?.edit || false}
                                                                         disabled={isLocked}
-                                                                        onCheckedChange={() => togglePermission(pIdx, 'edit')}
+                                                                        onCheckedChange={() => togglePermission(m.id, 'edit')}
                                                                         className="w-6 h-6 rounded-lg data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500 disabled:opacity-50"
                                                                     />
                                                                 </div>
@@ -1099,7 +1118,7 @@ export function TeamManager({ orgId, currentUserId, userRole, permissions, featu
                                                                     <Checkbox
                                                                         checked={p?.delete || false}
                                                                         disabled={isLocked}
-                                                                        onCheckedChange={() => togglePermission(pIdx, 'delete')}
+                                                                        onCheckedChange={() => togglePermission(m.id, 'delete')}
                                                                         className="w-6 h-6 rounded-lg data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600 disabled:opacity-50"
                                                                     />
                                                                 </div>
@@ -1123,6 +1142,8 @@ export function TeamManager({ orgId, currentUserId, userRole, permissions, featu
                                                                 case 'mass-update': tabsDef = massUpdateTabs; break;
                                                                 case 'inventory': tabsDef = inventoryTabs; break;
                                                                 case 'integrations': tabsDef = integrationsTabs; break;
+                                                                case 'commissions': tabsDef = commissionTabs; break;
+                                                                case 'team': tabsDef = teamTabs; break;
                                                                 default: tabsDef = [];
                                                             }
 

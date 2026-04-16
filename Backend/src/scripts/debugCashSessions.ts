@@ -7,7 +7,7 @@ dotenv.config({ path: 'e:/LAC-POS/Backend/.env' });
 
 const connectDB = async () => {
     try {
-        const uri = 'mongodb+srv://LuchinCaelli:4631911-Lac3762@cluster0.yyzeliw.mongodb.net/mi_sistema_saas?appName=Cluster0';
+        const uri = process.env.MONGO_URI || "";
         await mongoose.connect(uri);
         console.log('MongoDB Connected');
     } catch (error) {

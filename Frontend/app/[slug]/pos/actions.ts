@@ -1,4 +1,4 @@
-﻿'use server'
+'use server'
 
 
 import { revalidatePath } from 'next/cache'
@@ -11,6 +11,7 @@ interface CartItem {
     name: string
     price: number
     quantity: number
+    [key: string]: any; // Allow for extra metadata
 }
 
 import { productService } from '@/services/productService';

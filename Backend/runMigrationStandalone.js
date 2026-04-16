@@ -6,7 +6,7 @@ const mongoose = require('mongoose');
 const SUPABASE_URL = process.env.MIGRATION_SUPABASE_URL || 'https://hktxfhbeiyrddxpmipir.supabase.co';
 // WARNING: Hardcoded for reliability if env fails, but process.env is preferred
 const SUPABASE_KEY = process.env.MIGRATION_SUPABASE_KEY;
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://LuchinCaelli:4631911-Lac3762@cluster0.yyzeliw.mongodb.net/mi_sistema_saas?appName=Cluster0";
+const MONGO_URI = process.env.MONGO_URI;
 
 if (!SUPABASE_KEY) {
     console.error('❌ CRITICAL: Falta MIGRATION_SUPABASE_KEY');

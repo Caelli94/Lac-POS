@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import {
     AlertDialog,
@@ -48,6 +48,7 @@ type CartItem = Product & {
     exclude_from_general_discount?: boolean,
     variant_id?: string,
     variant_name?: string,
+    priceListId?: string,
 }
 
 interface Props {
@@ -425,7 +426,12 @@ export function PosInterface({ initialProducts, initialCustomers, initialPriceLi
                         if (pricesExcludeVat) {
                             finalPrice = finalPrice * (1 + globalTaxRate / 100);
                         }
-                        return { ...i, price: finalPrice, tax_rate: globalTaxRate }
+                        return { 
+                            ...i, 
+                            price: finalPrice, 
+                            tax_rate: globalTaxRate,
+                            priceListId: selectedPriceListId 
+                        }
                     }),
                     customerId: selectedCustomerId,
                     paymentMethod: '', // Legacy
