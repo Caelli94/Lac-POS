@@ -27,7 +27,8 @@ export const createSale = async (req: Request, res: Response) => {
     try {
         console.log("Creating Sale Payload:", JSON.stringify(req.body, null, 2));
 
-        const orgId = (req as any).user.organization; // Securely get from Token
+        const organizationPopulated = (req as any).user.organization; // Securely get from Token
+        const orgId = organizationPopulated?._id?.toString() || organizationPopulated?.toString();
         const {
             // orgId, // REMOVED: Do not trust body
             totalAmount,
@@ -386,8 +387,16 @@ export const createSale = async (req: Request, res: Response) => {
         await session.abortTransaction();
         session.endSession();
         console.error("Error creating sale:", error);
-        // Send the specific error message
-        res.status(400).json({ message: error.message || 'Error processing sale' });
+
+        // Sanitize error message to avoid data leaks (like CastErrors containing documents)
+        let userMessage = 'Error al procesar la venta';
+        if (error.name === 'CastError') {
+            userMessage = `Error de validación de datos: Valor inválido para el campo ${error.path}`;
+        } else if (error.message && error.message.length < 500) {
+            userMessage = error.message;
+        }
+
+        res.status(400).json({ message: userMessage });
     }
 };
 

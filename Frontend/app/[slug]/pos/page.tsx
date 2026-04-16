@@ -1,4 +1,4 @@
-﻿
+
 // import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { notFound } from 'next/navigation'
 import { cookies } from 'next/headers'
@@ -47,8 +47,7 @@ export default async function PosPage({ params, searchParams }: Props) {
         }
 
         // Prepare headers for SSR requests
-        const { cookies: getCookies } = await import('next/headers');
-        const headers = { Cookie: (await getCookies()).toString() };
+        const headers = { Cookie: (await cookies()).toString() };
 
         if (!registerId) {
             // Still no ID? Show Selector
@@ -152,7 +151,7 @@ export default async function PosPage({ params, searchParams }: Props) {
     }));
 
     // 6. Listas de Precios
-    const priceLists = await priceListService.getAll(org.id);
+    const priceLists = await priceListService.getAll(org.id, { headers: { Cookie: (await cookies()).toString() } });
 
     console.log("DEBUG: Price Lists fetched:", priceLists?.length, JSON.stringify(priceLists));
     console.log("DEBUG: Customers fetched:", customersWithFlags?.length);

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
     Dialog,
     DialogContent,
@@ -18,16 +18,19 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { Package, X, Check, Box } from "lucide-react";
+import { Package, X, Check, Box, Tag } from "lucide-react";
 
 interface VariantSelectorProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     product: any | null;
-    onSelectVariant: (variant: any) => void;
+    onSelectVariant: (variant: any, priceListId?: string) => void;
     branchId?: string | null;
+    priceLists?: any[];
+    defaultPriceListId?: string;
 }
 
 export function VariantSelector({
@@ -35,20 +38,25 @@ export function VariantSelector({
     onOpenChange,
     product,
     onSelectVariant,
-    branchId
+    branchId,
+    priceLists = [],
+    defaultPriceListId = ''
 }: VariantSelectorProps) {
-    if (!product) return null;
+    const [selectedListId, setSelectedListId] = useState(defaultPriceListId);
 
-    const variants = product.variants || [];
+    // Reset when dialog opens with new product
+    React.useEffect(() => {
+        if (open) setSelectedListId(defaultPriceListId);
+    }, [open, defaultPriceListId]);
 
     // 1. Analyze available attributes dynamically
-    // We look at all variants to see which standard keys (color, size) or custom keys exist.
     const columns = useMemo(() => {
         const cols = new Set<string>();
         let hasColor = false;
         let hasSize = false;
 
-        variants.forEach((v: any) => {
+        const variantsList = product?.variants || [];
+        variantsList.forEach((v: any) => {
             if (v.color) hasColor = true;
             if (v.size) hasSize = true;
             if (v.custom_attributes) {
@@ -61,13 +69,30 @@ export function VariantSelector({
             hasSize,
             custom: Array.from(cols)
         };
-    }, [variants]);
+    }, [product]);
+
+    if (!product) return null;
+
+    const variants = product.variants || [];
+
+    // Get price for the selected list
+    const getPriceForList = (pricing: any[], listId: string) => {
+        if (!pricing || !listId) return null;
+        const entry = pricing.find((e: any) => e.list_id === listId || e.list_id?._id === listId);
+        return entry?.price ?? null;
+    };
+
+    const productPrice = getPriceForList(product.pricing || [], selectedListId) ?? product.price;
+
+    const handleSelect = (variant: any) => {
+        onSelectVariant(variant, selectedListId);
+    };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden rounded-[1.5rem] border-none shadow-2xl font-sans bg-white ring-0 outline-none">
 
-                {/* Header matches TeamManager / Roles aesthetics: Simple, clean, slate-50/900 mix */}
+                {/* Header */}
                 <div className="flex justify-between items-center bg-slate-50 p-6 border-b border-slate-100">
                     <div>
                         <DialogTitle className="text-xl font-bold text-slate-900 flex items-center gap-2">
@@ -81,7 +106,33 @@ export function VariantSelector({
                     </div>
                 </div>
 
-                <div className="p-6">
+                {/* Price List Selector */}
+                {priceLists.length > 0 && (
+                    <div className="px-6 pt-4 pb-2">
+                        <div className="flex items-center gap-3 bg-indigo-50/60 p-3 rounded-xl border border-indigo-100">
+                            <Tag size={14} className="text-indigo-500 shrink-0" />
+                            <span className="text-[10px] font-black text-indigo-400 uppercase shrink-0">Lista de Precio:</span>
+                            <Select value={selectedListId} onValueChange={setSelectedListId}>
+                                <SelectTrigger className="bg-white border-indigo-200 rounded-lg h-9 text-[11px] font-black uppercase px-4 min-w-[140px] shadow-sm focus:ring-2 focus:ring-indigo-300">
+                                    <SelectValue placeholder="Seleccionar" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {priceLists.map(list => (
+                                        <SelectItem key={list.id || list._id} value={list.id || list._id} className="text-[10px] uppercase font-bold text-slate-700">
+                                            {list.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <div className="ml-auto text-right">
+                                <span className="text-[9px] font-black text-indigo-400 uppercase block">Precio Base</span>
+                                <span className="text-sm font-black text-indigo-600">${productPrice?.toLocaleString('es-AR') || '0'}</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                <div className="p-6 pt-2">
                     <div className="border rounded-xl overflow-hidden shadow-sm">
                         <ScrollArea className="max-h-[400px]">
                             <Table>
@@ -130,7 +181,7 @@ export function VariantSelector({
                                                         "transition-all cursor-pointer border-slate-50",
                                                         hasStock ? "hover:bg-slate-50" : "opacity-60 bg-slate-50/50"
                                                     )}
-                                                    onClick={() => onSelectVariant(variant)}
+                                                    onClick={() => handleSelect(variant)}
                                                 >
                                                     {/* COLOR */}
                                                     {columns.hasColor && (
@@ -193,7 +244,7 @@ export function VariantSelector({
                                                     <TableCell className="text-right py-4">
                                                         <Button
                                                             size="sm"
-                                                            onClick={(e) => { e.stopPropagation(); onSelectVariant(variant); }}
+                                                            onClick={(e) => { e.stopPropagation(); handleSelect(variant); }}
                                                             className={cn(
                                                                 "h-8 px-4 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all",
                                                                 hasStock ? "bg-slate-900 hover:bg-slate-800 text-white shadow-sm" : "bg-white text-slate-500 border border-slate-200 hover:border-slate-800 hover:text-slate-900"
@@ -221,3 +272,4 @@ export function VariantSelector({
         </Dialog>
     );
 }
+

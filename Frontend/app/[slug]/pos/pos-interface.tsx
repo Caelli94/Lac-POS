@@ -91,9 +91,11 @@ export function PosInterface({ initialProducts, initialCustomers, initialPriceLi
     const [lastSale, setLastSale] = useState<any>(null)
     const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null)
     const [documentType, setDocumentType] = useState<string>('ticket')
-    const [selectedPriceListId, setSelectedPriceListId] = useState<string>(
-        initialPriceLists.length > 0 ? initialPriceLists[0].id : ''
-    )
+    const [selectedPriceListId, setSelectedPriceListId] = useState<string>(() => {
+        if (!initialPriceLists || initialPriceLists.length === 0) return '';
+        const principal = initialPriceLists.find((l: any) => l.name === 'PRINCIPAL');
+        return principal ? principal.id : initialPriceLists[0].id;
+    })
     const [globalTaxRate, setGlobalTaxRate] = useState<number>(21.0)
     const [pricesExcludeVat, setPricesExcludeVat] = useState<boolean>(false)
     const [isMounted, setIsMounted] = useState(false)
@@ -127,7 +129,9 @@ export function PosInterface({ initialProducts, initialCustomers, initialPriceLi
                             let displayPrice = p.price;
                             if (selectedPriceListId && p.pricing) {
                                 const priceEntry = p.pricing.find((entry: any) => entry.list_id === selectedPriceListId || entry.list_id?._id === selectedPriceListId);
-                                if (priceEntry) displayPrice = priceEntry.price;
+                                if (priceEntry && priceEntry.price !== undefined && priceEntry.price !== 0) {
+                                    displayPrice = priceEntry.price;
+                                }
                             }
                             return { ...p, price: displayPrice }
                         });
@@ -176,6 +180,11 @@ export function PosInterface({ initialProducts, initialCustomers, initialPriceLi
     const [isVariantSelectorOpen, setIsVariantSelectorOpen] = useState(false)
     const [selectedProductForVariants, setSelectedProductForVariants] = useState<Product | null>(null)
 
+    // Quick Add Dialog State (for products WITHOUT variants)
+    const [isQuickAddOpen, setIsQuickAddOpen] = useState(false)
+    const [quickAddProduct, setQuickAddProduct] = useState<Product | null>(null)
+    const [quickAddListId, setQuickAddListId] = useState<string>(selectedPriceListId)
+
     // Editor State
     const [editingItem, setEditingItem] = useState<CartItem | null>(null)
 
@@ -221,24 +230,30 @@ export function PosInterface({ initialProducts, initialCustomers, initialPriceLi
         toast.success("Ítem agregado");
     }
 
-    // Sync Cart Prices when Price List changes
+    // Sync Cart Prices when global Price List changes
+    // Only affects items that use the GLOBAL price list (no individual override)
     useMemo(() => {
         if (!selectedPriceListId) return;
 
         setCart(currentCart => {
             return currentCart.map(item => {
-                const originalProduct = initialProducts.find(p => p.id === item.id);
+                // Skip items with their own specific price list
+                if (item.priceListId && item.priceListId !== selectedPriceListId) return item;
+
+                const originalProduct = initialProducts.find(p => p.id === item.id || p._id === item.id);
                 if (!originalProduct) return item;
 
                 let newPrice = originalProduct.price;
                 if (originalProduct.pricing) {
                     const priceEntry = originalProduct.pricing.find((entry: any) => entry.list_id === selectedPriceListId || entry.list_id?._id === selectedPriceListId);
-                    if (priceEntry) newPrice = priceEntry.price;
+                    if (priceEntry && priceEntry.price !== undefined && priceEntry.price !== 0) {
+                        newPrice = priceEntry.price;
+                    }
                 }
 
                 if (item.price === newPrice) return item;
 
-                return { ...item, price: newPrice };
+                return { ...item, price: newPrice, priceListId: selectedPriceListId };
             });
         });
     }, [selectedPriceListId, initialProducts]);
@@ -310,27 +325,37 @@ export function PosInterface({ initialProducts, initialCustomers, initialPriceLi
     // --- HANDLERS ---
     // --- HANDLERS ---
     const addToCart = (product: Product) => {
-        // Validation: If product has variants, open selector
+        // Validation: If product has variants, open variant selector (with price list)
         if (product.variants && product.variants.length > 0) {
             setSelectedProductForVariants(product);
             setIsVariantSelectorOpen(true);
             return;
         }
 
-        addItemToCart(product);
+        // For products WITHOUT variants, open quick-add dialog with price list selector
+        setQuickAddProduct(product);
+        setQuickAddListId(selectedPriceListId);
+        setIsQuickAddOpen(true);
     }
 
-    const addItemToCart = (product: Product, variant?: any) => {
+    const addItemToCart = (product: Product, variant?: any, itemPriceListId?: string) => {
+        // Determine pricing from the selected list for this item
+        const listId = itemPriceListId || selectedPriceListId;
+        let itemPrice = product.price;
+        if (listId && product.pricing) {
+            const priceEntry = product.pricing.find((entry: any) => entry.list_id === listId || entry.list_id?._id === listId);
+            if (priceEntry && priceEntry.price !== undefined && priceEntry.price !== 0) {
+                itemPrice = priceEntry.price;
+            }
+        }
+
         setCart(current => {
-            // Identifier logic: if variant, use variant_id, else product.id
-            // NO, we must keys by (product.id + variant_id) to separate lines
             const variantId = variant ? (variant._id || variant.id) : undefined;
 
-            // Generate a unique ID for the cart line to handle separate lines nicely? 
-            // Or just search by pId + vId
             const existing = current.find(i =>
                 i.id === product.id &&
-                i.variant_id === variantId
+                i.variant_id === variantId &&
+                i.priceListId === listId
             )
 
             // Stock Limit Check
@@ -343,7 +368,7 @@ export function PosInterface({ initialProducts, initialCustomers, initialPriceLi
 
             if (existing) {
                 return current.map(i =>
-                    (i.id === product.id && i.variant_id === variantId)
+                    (i.id === product.id && i.variant_id === variantId && i.priceListId === listId)
                         ? { ...i, quantity: i.quantity + 1 }
                         : i
                 )
@@ -351,31 +376,41 @@ export function PosInterface({ initialProducts, initialCustomers, initialPriceLi
 
             return [...current, {
                 ...product,
+                price: itemPrice,
                 quantity: 1,
                 variant_id: variantId,
                 variant_name: variant ? `${variant.size || ''} ${variant.color || ''}`.trim() : undefined,
-                current_stock: stockLimit // Override stock for cart item to be variant stock
+                current_stock: stockLimit,
+                priceListId: listId
             }]
         })
     }
 
-    const handleVariantSelect = (variant: any) => {
+    const handleVariantSelect = (variant: any, priceListId?: string) => {
         if (selectedProductForVariants) {
-            addItemToCart(selectedProductForVariants, variant);
+            addItemToCart(selectedProductForVariants, variant, priceListId);
             setIsVariantSelectorOpen(false);
             setSelectedProductForVariants(null);
             toast.success("Variante agregada");
         }
     }
 
+    const handleQuickAdd = () => {
+        if (quickAddProduct) {
+            addItemToCart(quickAddProduct, undefined, quickAddListId);
+            setIsQuickAddOpen(false);
+            setQuickAddProduct(null);
+            toast.success("Producto agregado");
+        }
+    }
+
     // Helper to update quantity
-    const updateQuantity = (itemId: string, variantId: string | undefined, delta: number) => {
+    const updateQuantity = (itemId: string, variantId: string | undefined, priceListId: string | undefined, delta: number) => {
         setCart(current => {
             return current.map(item => {
-                if (item.id === itemId && item.variant_id === variantId) {
+                if (item.id === itemId && item.variant_id === variantId && item.priceListId === priceListId) {
                     const newQty = item.quantity + delta;
-                    // Check stock specifically for the variant line item
-                    const stockLimit = item.current_stock; // This was set correctly in addToCart
+                    const stockLimit = item.current_stock;
                     if (newQty > stockLimit) {
                         toast.error("Stock insuficiente (Límite alcanzado)");
                         return item;
@@ -383,7 +418,7 @@ export function PosInterface({ initialProducts, initialCustomers, initialPriceLi
                     return { ...item, quantity: newQty };
                 }
                 return item;
-            }).filter(item => item.quantity > 0); // Remove if qty <= 0
+            }).filter(item => item.quantity > 0);
         });
     };
 
@@ -430,7 +465,7 @@ export function PosInterface({ initialProducts, initialCustomers, initialPriceLi
                             ...i, 
                             price: finalPrice, 
                             tax_rate: globalTaxRate,
-                            priceListId: selectedPriceListId 
+                            priceListId: i.priceListId || selectedPriceListId 
                         }
                     }),
                     customerId: selectedCustomerId,
@@ -518,7 +553,7 @@ export function PosInterface({ initialProducts, initialCustomers, initialPriceLi
             let displayPrice = p.price;
             if (selectedPriceListId && p.pricing) {
                 const priceEntry = p.pricing.find((entry: any) => entry.list_id === selectedPriceListId || entry.list_id?._id === selectedPriceListId);
-                if (priceEntry) {
+                if (priceEntry && priceEntry.price !== undefined && priceEntry.price !== 0) {
                     displayPrice = priceEntry.price;
                 }
             }
@@ -712,7 +747,7 @@ export function PosInterface({ initialProducts, initialCustomers, initialPriceLi
                                         </div>
                                     )}
                                     {cart.map((item) => (
-                                        <div key={`${item.id}-${item.variant_id}`} className={cn("group flex gap-2 py-3 border-b border-dashed border-slate-100 last:border-0", (item.discount || item.exclude_from_general_discount) && "bg-slate-50/50 -mx-2 px-2 rounded-lg")}>
+                                        <div key={`${item.id}-${item.variant_id || 'base'}-${item.priceListId || 'default'}`} className={cn("group flex gap-2 py-3 border-b border-dashed border-slate-100 last:border-0", (item.discount || item.exclude_from_general_discount) && "bg-slate-50/50 -mx-2 px-2 rounded-lg")}>
                                             <div className="flex-1 cursor-pointer" onClick={() => setEditingItem(item)}>
                                                 <div className="flex justify-between items-start gap-2">
                                                     <div>
@@ -733,7 +768,7 @@ export function PosInterface({ initialProducts, initialCustomers, initialPriceLi
                                                             size="icon"
                                                             variant="ghost"
                                                             className="h-6 w-6 rounded-full hover:bg-white hover:text-red-600 hover:shadow-sm transition-all"
-                                                            onClick={() => updateQuantity(item.id, item.variant_id, -1)}
+                                                            onClick={() => updateQuantity(item.id, item.variant_id, item.priceListId, -1)}
                                                         >
                                                             {item.quantity === 1 ? <Trash2 size={12} /> : <Minus size={12} strokeWidth={3} />}
                                                         </Button>
@@ -742,7 +777,7 @@ export function PosInterface({ initialProducts, initialCustomers, initialPriceLi
                                                             size="icon"
                                                             variant="ghost"
                                                             className="h-6 w-6 rounded-full hover:bg-white hover:text-blue-600 hover:shadow-sm transition-all"
-                                                            onClick={() => updateQuantity(item.id, item.variant_id, 1)}
+                                                            onClick={() => updateQuantity(item.id, item.variant_id, item.priceListId, 1)}
                                                         >
                                                             <Plus size={12} strokeWidth={3} />
                                                         </Button>
@@ -757,7 +792,7 @@ export function PosInterface({ initialProducts, initialCustomers, initialPriceLi
                                                 </span>
                                                 <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 mt-1">
                                                     <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); setEditingItem(item); }} className="h-7 w-7 text-slate-300 hover:text-blue-500 rounded-full hover:bg-blue-50"><Edit2 size={14} /></Button>
-                                                    <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); setCart(c => c.filter(i => !(i.id === item.id && i.variant_id === item.variant_id))); }} className="h-7 w-7 text-slate-300 hover:text-red-500 rounded-full hover:bg-red-50"><Trash2 size={14} /></Button>
+                                                    <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); setCart(c => c.filter(i => !(i.id === item.id && i.variant_id === item.variant_id && i.priceListId === item.priceListId))); }} className="h-7 w-7 text-slate-300 hover:text-red-500 rounded-full hover:bg-red-50"><Trash2 size={14} /></Button>
                                                 </div>
                                             </div>
                                         </div>
@@ -826,7 +861,79 @@ export function PosInterface({ initialProducts, initialCustomers, initialPriceLi
                 product={selectedProductForVariants}
                 onSelectVariant={handleVariantSelect}
                 branchId={activeBranchId}
+                priceLists={initialPriceLists}
+                defaultPriceListId={selectedPriceListId}
             />
+
+            {/* Quick Add Dialog (Products WITHOUT variants) */}
+            <Dialog open={isQuickAddOpen} onOpenChange={setIsQuickAddOpen}>
+                <DialogContent className="max-w-[420px] bg-white rounded-[1.5rem] p-0 border-none shadow-2xl overflow-hidden">
+                    <div className="flex justify-between items-center bg-slate-50 p-6 border-b border-slate-100">
+                        <div>
+                            <DialogTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                                <Package size={20} className="text-slate-500" />
+                                {quickAddProduct?.name}
+                            </DialogTitle>
+                            <DialogDescription className="text-sm text-slate-500 mt-1">
+                                Confirmar producto y lista de precio.
+                            </DialogDescription>
+                        </div>
+                    </div>
+                    <div className="p-6 space-y-4">
+                        {/* Price List Selector */}
+                        {initialPriceLists.length > 0 && (
+                            <div className="flex items-center gap-3 bg-indigo-50/60 p-3 rounded-xl border border-indigo-100">
+                                <Tag size={14} className="text-indigo-500 shrink-0" />
+                                <span className="text-[10px] font-black text-indigo-400 uppercase shrink-0">Lista:</span>
+                                <Select value={quickAddListId} onValueChange={setQuickAddListId}>
+                                    <SelectTrigger className="bg-white border-indigo-200 rounded-lg h-9 text-[11px] font-black uppercase px-4 flex-1 shadow-sm focus:ring-2 focus:ring-indigo-300">
+                                        <SelectValue placeholder="Seleccionar" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {initialPriceLists.map(list => (
+                                            <SelectItem key={list.id || list._id} value={list.id || list._id} className="text-[10px] uppercase font-bold text-slate-700">
+                                                {list.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+
+                        {/* Price Preview */}
+                        <div className="flex justify-between items-center bg-slate-50 p-4 rounded-xl border border-slate-100">
+                            <span className="text-[10px] font-black text-slate-400 uppercase">Precio</span>
+                            <span className="text-xl font-black text-indigo-600">
+                                {currency}{(() => {
+                                    if (!quickAddProduct) return '0';
+                                    let p = quickAddProduct.price;
+                                    if (quickAddListId && quickAddProduct.pricing) {
+                                        const entry = quickAddProduct.pricing.find((e: any) => e.list_id === quickAddListId || e.list_id?._id === quickAddListId);
+                                        if (entry && entry.price !== undefined && entry.price !== 0) p = entry.price;
+                                    }
+                                    return p.toLocaleString('es-AR');
+                                })()}
+                            </span>
+                        </div>
+
+                        {/* Stock info */}
+                        <div className="flex justify-between items-center">
+                            <span className="text-[10px] font-black text-slate-400 uppercase">Stock Disponible</span>
+                            <Badge variant={quickAddProduct?.current_stock && quickAddProduct.current_stock > 0 ? 'secondary' : 'destructive'} className="text-[10px] font-bold">
+                                {quickAddProduct?.current_stock || 0} Un.
+                            </Badge>
+                        </div>
+                    </div>
+                    <div className="p-4 bg-slate-50 border-t border-slate-100 flex gap-2 justify-end">
+                        <Button variant="outline" onClick={() => setIsQuickAddOpen(false)} className="rounded-xl font-bold text-xs h-10 px-6 border-slate-200 hover:bg-white">
+                            Cancelar
+                        </Button>
+                        <Button onClick={handleQuickAdd} className="rounded-xl font-bold text-xs h-10 px-6 bg-slate-900 hover:bg-black text-white shadow-sm">
+                            <Plus size={14} className="mr-1" /> Agregar al Ticket
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             {editingItem && (
                 <CartItemEditor
@@ -834,10 +941,10 @@ export function PosInterface({ initialProducts, initialCustomers, initialPriceLi
                     isOpen={!!editingItem}
                     onClose={() => setEditingItem(null)}
                     onSave={(updates: any) => {
-                        setCart(current => current.map(i => (i.id === editingItem.id && i.variant_id === editingItem.variant_id) ? { ...i, ...updates } : i))
+                        setCart(current => current.map(i => (i.id === editingItem.id && i.variant_id === editingItem.variant_id && i.priceListId === editingItem.priceListId) ? { ...i, ...updates } : i))
                     }}
                     onDelete={() => {
-                        setCart(current => current.filter(i => !(i.id === editingItem.id && i.variant_id === editingItem.variant_id)))
+                        setCart(current => current.filter(i => !(i.id === editingItem.id && i.variant_id === editingItem.variant_id && i.priceListId === editingItem.priceListId)))
                         setEditingItem(null)
                     }}
                 />
@@ -1033,25 +1140,33 @@ export function PosInterface({ initialProducts, initialCustomers, initialPriceLi
 
             {/* ERROR MODAL */}
             <Dialog open={errorModal.open} onOpenChange={(open) => !open && setErrorModal(prev => ({ ...prev, open: false }))}>
-                <DialogContent className="max-w-[400px] bg-white rounded-[2rem] p-8 border-none shadow-2xl z-[150]">
+                <DialogContent className="max-w-[440px] bg-white rounded-[2.5rem] p-10 border-none shadow-2xl z-[150] overflow-hidden">
                     <DialogHeader>
-                        <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-center text-red-600">
+                        <DialogTitle className="text-3xl font-black uppercase tracking-tighter text-center text-red-600 mb-2">
                             Error en la Venta
                         </DialogTitle>
-                        <DialogDescription className="hidden">Error</DialogDescription>
+                        <DialogDescription className="hidden">Error Detallado</DialogDescription>
                     </DialogHeader>
-                    <div className="flex flex-col items-center text-center space-y-6">
-                        <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center text-red-500 animate-in zoom-in duration-300">
-                            <AlertTriangle size={40} />
+                    <div className="flex flex-col items-center text-center space-y-8">
+                        <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center text-red-500 animate-in zoom-in duration-500 shadow-inner">
+                            <AlertTriangle size={48} />
                         </div>
-                        <p className="text-lg text-slate-700 font-medium leading-relaxed">
-                            {errorModal.message}
-                        </p>
+                        
+                        <div className="w-full bg-slate-50/80 rounded-2xl p-6 border border-slate-100">
+                            <ScrollArea className="max-h-[220px] w-full pr-4">
+                                <p className="text-base text-slate-800 font-bold leading-relaxed whitespace-pre-wrap break-words">
+                                    {typeof errorModal.message === 'string' 
+                                        ? errorModal.message 
+                                        : JSON.stringify(errorModal.message, null, 2)}
+                                </p>
+                            </ScrollArea>
+                        </div>
+
                         <Button
                             onClick={() => setErrorModal({ open: false, message: '' })}
-                            className="w-full bg-slate-900 text-white h-14 rounded-2xl font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl"
+                            className="w-full bg-slate-900 text-white h-16 rounded-2xl font-black uppercase tracking-[0.2em] text-xs hover:bg-black transition-all shadow-xl shadow-slate-200 group"
                         >
-                            Entendido
+                            <span className="group-hover:scale-105 transition-transform">Entendido y Volver</span>
                         </Button>
                     </div>
                 </DialogContent>

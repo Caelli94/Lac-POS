@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { createProductAction, getPriceListsAction, getBranchesAction, checkSkuAction } from './actions'
@@ -549,6 +549,12 @@ export function ProductForm({ initialData, isEditMode, orgId, slug, categories, 
             submitData.append('manages_lots', formData.manages_lots.toString())
             submitData.append('category_ids', JSON.stringify(formData.category_ids))
             submitData.append('variants', JSON.stringify(formData.variants))
+            // Sincronizar precio raíz con la lista PRINCIPAL para consistencia en DB
+            const mainList = lists.find((l: any) => l.name === 'PRINCIPAL' || l.is_default);
+            const pData = mainList ? formData.pricing[mainList.id] : null;
+            const principalPrice = pData ? (pData.finalPrice ?? pData.price) : (initialData?.price || 0);
+
+            submitData.append('price', (principalPrice || 0).toString())
             submitData.append('pricing', JSON.stringify(formData.pricing))
             submitData.append('price_changed', priceChanged.toString())
             submitData.append('custom_attributes', JSON.stringify(formData.custom_attributes))

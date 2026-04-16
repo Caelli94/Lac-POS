@@ -395,10 +395,18 @@ export const createProduct = async (req: Request, res: Response) => {
             lots_data // Nueva estructura de lotes con distribución
         } = req.body;
 
+        const finalPricing = transformPricing(pricing, cost);
+        // Sync root price with PRINCIPAL if exists
+        let rootPrice = price;
+        const principalEntry = finalPricing.find((p: any) => p.name === 'PRINCIPAL');
+        if (principalEntry) {
+            rootPrice = principalEntry.price;
+        }
+
         const product = await Product.create({
             organization_id, // FORCED from Token
             name,
-            price,
+            price: rootPrice,
             cost: cost || 0,
             stock: stock || 0,
             min_stock: min_stock || 0,
@@ -407,7 +415,7 @@ export const createProduct = async (req: Request, res: Response) => {
             category_ids,
             supplier_id,
             variants,
-            pricing: transformPricing(pricing, cost),
+            pricing: finalPricing,
             is_visible: is_visible === 'true' || is_visible === true,
             manages_lots: manages_lots === 'true' || manages_lots === true,
             description,
@@ -479,7 +487,14 @@ export const updateProduct = async (req: Request, res: Response) => {
         if (category_ids !== undefined) updateData.category_ids = category_ids;
         if (supplier_id !== undefined) updateData.supplier_id = supplier_id;
         if (variants !== undefined) updateData.variants = variants;
-        if (pricing !== undefined) updateData.pricing = transformPricing(pricing, cost); // Only update if provided
+        if (pricing !== undefined) {
+            updateData.pricing = transformPricing(pricing, cost);
+            // Sync root price if PRINCIPAL exists in pricing update
+            const principalEntry = updateData.pricing.find((pe: any) => pe.name === 'PRINCIPAL');
+            if (principalEntry) {
+                updateData.price = principalEntry.price;
+            }
+        }
         if (is_visible !== undefined) updateData.is_visible = (is_visible === 'true' || is_visible === true);
         if (manages_lots !== undefined) updateData.manages_lots = (manages_lots === 'true' || manages_lots === true);
         if (description !== undefined) updateData.description = description;
