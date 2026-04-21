@@ -462,15 +462,24 @@ export default function CheckingAccountManager({ customerId, orgId, slug, initia
                                     <td className="p-3 align-top">
                                         <div className="flex flex-col">
                                             <span className="text-[10px] font-bold text-slate-700 uppercase px-2 py-1 bg-slate-50 rounded border border-slate-100 w-fit">
-                                                {(mov as any).performed_by?.name || (mov as any).performed_by || 'Sistema'}
+                                                {(() => {
+                                                    const name = (mov as any).performed_by?.name || (mov as any).performed_by || 'Sistema';
+                                                    return typeof name === 'string' ? name : 'Sistema';
+                                                })()}
                                             </span>
-                                            {typeof (mov as any).performed_by === 'object' && (mov as any).performed_by?.role && (
-                                                <span className="text-[9px] font-black text-slate-400 uppercase mt-0.5 ml-1 italic tracking-widest">
-                                                    {(mov as any).performed_by.role === 'admin' ? 'Administrador' :
-                                                        ((mov as any).performed_by.role === 'seller' || (mov as any).performed_by.role === 'vendedor') ? 'Vendedor' :
-                                                            (mov as any).performed_by.role}
-                                                </span>
-                                            )}
+                                            <span className="text-[9px] font-black text-slate-400 uppercase mt-0.5 ml-1 italic tracking-widest">
+                                                {(() => {
+                                                    const roleRaw = (mov as any).performed_by?.role || (mov as any).performed_by?.roleId?.name || '';
+                                                    const r = String(roleRaw).toLowerCase();
+                                                    
+                                                    // SI DICE "USER" O "SELLER" O "VENDEDOR", FORZAMOS "VENDEDOR"
+                                                    if (r === 'user' || r.includes('sell') || r.includes('vend')) return 'Vendedor';
+                                                    if (r.includes('admin')) return 'Administrador';
+                                                    
+                                                    // Si no hay rol pero el nombre no es Sistema, asumimos Vendedor por defecto si es lo que quieres
+                                                    return roleRaw || 'Vendedor';
+                                                })()}
+                                            </span>
                                         </div>
                                     </td>
                                     <td className={`p-3 align-top text-right font-bold ${mov.status === 'cancelled' ? 'line-through decoration-slate-400 text-slate-400' : (mov.type === 'DEBIT' ? 'text-red-600' : 'text-emerald-600')}`}>
