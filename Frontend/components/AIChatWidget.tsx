@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { authService } from '@/services/authService';
+import { API_URL } from '@/lib/api-config';
 import ReactMarkdown from 'react-markdown';
 
 import { usePathname } from 'next/navigation';
@@ -140,9 +141,10 @@ export function AIChatWidget() {
         setIsLoading(true);
 
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api'}/chatbot/ask`, {
+            const res = await fetch(`${API_URL}/chatbot/ask`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify({
                     message: userMsg
                 })
