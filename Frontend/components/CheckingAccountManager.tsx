@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useEffect, useCallback } from 'react';
 import { Eye, Loader2, AlertTriangle, Ban, CheckCircle2 } from 'lucide-react';
 import { SaleDetailModal } from '@/components/sales/SaleDetailModal';
@@ -466,7 +466,9 @@ export default function CheckingAccountManager({ customerId, orgId, slug, initia
                                             </span>
                                             {typeof (mov as any).performed_by === 'object' && (mov as any).performed_by?.role && (
                                                 <span className="text-[9px] font-black text-slate-400 uppercase mt-0.5 ml-1 italic tracking-widest">
-                                                    {(mov as any).performed_by.role === 'admin' ? 'Administrador' : (mov as any).performed_by.role}
+                                                    {(mov as any).performed_by.role === 'admin' ? 'Administrador' :
+                                                        ((mov as any).performed_by.role === 'seller' || (mov as any).performed_by.role === 'vendedor') ? 'Vendedor' :
+                                                            (mov as any).performed_by.role}
                                                 </span>
                                             )}
                                         </div>
