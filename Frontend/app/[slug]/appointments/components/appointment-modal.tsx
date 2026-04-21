@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,6 +11,7 @@ import { customerService } from '@/services/customerService'
 import { appointmentService } from '@/services/appointmentService'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
+import { AlertTriangle } from 'lucide-react'
 
 interface AppointmentModalProps {
     isOpen: boolean;
@@ -18,9 +19,10 @@ interface AppointmentModalProps {
     orgId: string;
     onSuccess: () => void;
     initialDate?: Date;
+    appointmentToEdit?: any;
 }
 
-export function AppointmentModal({ isOpen, onClose, orgId, onSuccess, initialDate }: AppointmentModalProps) {
+export function AppointmentModal({ isOpen, onClose, orgId, onSuccess, initialDate, appointmentToEdit }: AppointmentModalProps) {
     const [searchQuery, setSearchQuery] = useState('')
     const [customers, setCustomers] = useState<any[]>([])
     const [selectedCustomer, setSelectedCustomer] = useState<any>(null)
@@ -28,8 +30,35 @@ export function AppointmentModal({ isOpen, onClose, orgId, onSuccess, initialDat
     const [time, setTime] = useState('09:00')
     const [service, setService] = useState('')
     const [notes, setNotes] = useState('')
+    const [phone, setPhone] = useState('')
     const [loading, setLoading] = useState(false)
     const [searching, setSearching] = useState(false)
+    const [showPhoneWarning, setShowPhoneWarning] = useState(false)
+    
+    const phoneInputRef = useRef<HTMLInputElement>(null)
+
+    const isEditMode = !!appointmentToEdit;
+
+    useEffect(() => {
+        if (appointmentToEdit) {
+            if (appointmentToEdit.client_id) {
+                setSelectedCustomer(appointmentToEdit.client_id);
+            } else {
+                setSearchQuery(appointmentToEdit.guest_name || '');
+            }
+            const appDate = new Date(appointmentToEdit.date);
+            setDate(format(appDate, 'yyyy-MM-dd'));
+            setTime(format(appDate, 'HH:mm'));
+            setService(appointmentToEdit.service_description || '');
+            setNotes(appointmentToEdit.notes || '');
+            setPhone(appointmentToEdit.client_id?.phone || appointmentToEdit.guest_phone || '');
+        } else {
+            resetForm();
+            if (initialDate) {
+                setDate(format(initialDate, 'yyyy-MM-dd'));
+            }
+        }
+    }, [appointmentToEdit, initialDate, isOpen]);
 
     // Buscador reactivo de clientes
     useEffect(() => {
@@ -61,28 +90,50 @@ export function AppointmentModal({ isOpen, onClose, orgId, onSuccess, initialDat
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!selectedCustomer) return toast.error("Debe seleccionar un cliente")
+        
+        if (!selectedCustomer && !searchQuery.trim()) {
+            return toast.error("Debe seleccionar un cliente o escribir un nombre")
+        }
+        
         if (!service) return toast.error("Debe describir el servicio")
 
+        if (!phone.trim()) {
+            setShowPhoneWarning(true);
+            return;
+        }
+
+        performSave();
+    }
+
+    const performSave = async () => {
         setLoading(true)
         try {
             const appointmentDate = new Date(`${date}T${time}:00`);
-            const res = await appointmentService.create({
+            const payload = {
                 organization_id: orgId,
-                client_id: selectedCustomer._id,
+                client_id: selectedCustomer ? selectedCustomer._id : undefined,
+                guest_name: !selectedCustomer ? searchQuery : undefined,
+                guest_phone: phone,
                 date: appointmentDate,
                 service_description: service,
                 notes
-            })
+            }
+
+            const res = isEditMode 
+                ? await appointmentService.update(appointmentToEdit._id, payload)
+                : await appointmentService.create(payload);
 
             if (res.success) {
-                toast.success("Turno agendado correctamente")
+                toast.success(isEditMode ? "Turno actualizado" : "Turno agendado correctamente")
                 onSuccess()
                 onClose()
-                resetForm()
+                if (!isEditMode) resetForm()
+                setShowPhoneWarning(false)
+            } else {
+                toast.error(res.message || "Error al procesar el turno")
             }
         } catch (error) {
-            toast.error("Error al agendar el turno")
+            toast.error("Error en la operación")
         } finally {
             setLoading(false)
         }
@@ -93,6 +144,14 @@ export function AppointmentModal({ isOpen, onClose, orgId, onSuccess, initialDat
         setSearchQuery('')
         setService('')
         setNotes('')
+        setPhone('')
+        setTime('07:00')
+    }
+
+    const handleSelectCustomer = (c: any) => {
+        setSelectedCustomer(c);
+        if (c.phone) setPhone(c.phone);
+        setSearchQuery('');
     }
 
     return (
@@ -100,7 +159,7 @@ export function AppointmentModal({ isOpen, onClose, orgId, onSuccess, initialDat
             <DialogContent className="max-w-2xl bg-white rounded-[2rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col">
                 <DialogHeader className="bg-slate-50 p-6 border-b border-slate-100 shrink-0">
                     <DialogTitle className="text-xl font-black uppercase tracking-tight">
-                        Agendar Nuevo Turno
+                        {isEditMode ? 'Editar Turno' : 'Agendar Nuevo Turno'}
                     </DialogTitle>
                 </DialogHeader>
 
@@ -117,7 +176,7 @@ export function AppointmentModal({ isOpen, onClose, orgId, onSuccess, initialDat
                                         </div>
                                         <div>
                                             <p className="font-black text-slate-900 leading-none">{selectedCustomer.name}</p>
-                                            <p className="text-xs font-medium text-slate-500 mt-1">{selectedCustomer.phone || 'Sin télefono'}</p>
+                                            <p className="text-xs font-medium text-slate-500 mt-1">{phone || 'Sin télefono'}</p>
                                         </div>
                                     </div>
                                     <Button type="button" variant="ghost" size="sm" onClick={() => setSelectedCustomer(null)} className="text-slate-400 hover:text-rose-600 font-bold text-[10px] uppercase">
@@ -141,7 +200,7 @@ export function AppointmentModal({ isOpen, onClose, orgId, onSuccess, initialDat
                                                 <div
                                                     key={c._id}
                                                     className="p-4 hover:bg-slate-50 cursor-pointer flex items-center gap-3 border-b border-slate-50 last:border-0"
-                                                    onClick={() => setSelectedCustomer(c)}
+                                                    onClick={() => handleSelectCustomer(c)}
                                                 >
                                                     <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400">
                                                         <User size={16} />
@@ -156,6 +215,17 @@ export function AppointmentModal({ isOpen, onClose, orgId, onSuccess, initialDat
                                     )}
                                 </div>
                             )}
+                        </div>
+
+                        <div className="space-y-2 md:col-span-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Teléfono (WhatsApp)</Label>
+                            <Input
+                                ref={phoneInputRef}
+                                placeholder="Ej: 1122334455"
+                                className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-slate-900 focus:ring-2 focus:ring-slate-950/10"
+                                value={phone}
+                                onChange={(e) => setPhone(e.target.value)}
+                            />
                         </div>
 
                         <div className="space-y-2">
@@ -223,13 +293,49 @@ export function AppointmentModal({ isOpen, onClose, orgId, onSuccess, initialDat
                         >
                             {loading ? 'Procesando...' : (
                                 <span className="flex items-center gap-2">
-                                    <CheckCircle2 size={16} /> Confirmar Reserva
+                                    <CheckCircle2 size={16} /> {isEditMode ? 'Guardar Cambios' : 'Confirmar Reserva'}
                                 </span>
                             )}
                         </Button>
                     </div>
                 </form>
             </DialogContent>
+
+            {/* MODAL DE ADVERTENCIA DE TELÉFONO */}
+            <Dialog open={showPhoneWarning} onOpenChange={setShowPhoneWarning}>
+                <DialogContent className="max-w-[400px] bg-white rounded-[2rem] p-8 border-none shadow-2xl z-[150]">
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-center">Falta el teléfono</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex flex-col items-center text-center space-y-4">
+                        <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center text-amber-500">
+                            <AlertTriangle size={32} />
+                        </div>
+                        <p className="text-sm font-medium text-slate-500">
+                            No has ingresado un número de teléfono. <b>No podrás enviar recordatorios de WhatsApp</b> para este turno.
+                        </p>
+                        <div className="w-full grid grid-cols-1 gap-3 mt-4">
+                            <Button 
+                                onClick={performSave} 
+                                disabled={loading} 
+                                className="bg-slate-900 text-white rounded-xl h-12 font-black uppercase text-[10px]"
+                            >
+                                {loading ? 'Procesando...' : 'Guardar de todas formas'}
+                            </Button>
+                            <Button 
+                                variant="outline" 
+                                onClick={() => {
+                                    setShowPhoneWarning(false);
+                                    setTimeout(() => phoneInputRef.current?.focus(), 100);
+                                }} 
+                                className="rounded-xl h-12 font-bold uppercase text-[10px]"
+                            >
+                                Volver y agregar número
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </Dialog>
     )
 }

@@ -3,7 +3,9 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface IAppointment extends Document {
     organization_id: mongoose.Types.ObjectId;
     branch_id?: mongoose.Types.ObjectId;
-    client_id: mongoose.Types.ObjectId;
+    client_id?: mongoose.Types.ObjectId;
+    guest_name?: string;
+    guest_phone?: string;
     date: Date;
     end_date?: Date;
     service_description: string;
@@ -18,7 +20,9 @@ export interface IAppointment extends Document {
 const AppointmentSchema: Schema = new Schema({
     organization_id: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
     branch_id: { type: Schema.Types.ObjectId, ref: 'Branch' },
-    client_id: { type: Schema.Types.ObjectId, ref: 'Customer', required: true },
+    client_id: { type: Schema.Types.ObjectId, ref: 'Customer' },
+    guest_name: { type: String },
+    guest_phone: { type: String },
     date: { type: Date, required: true },
     end_date: { type: Date },
     service_description: { type: String, required: true },
@@ -40,5 +44,6 @@ const AppointmentSchema: Schema = new Schema({
 AppointmentSchema.index({ organization_id: 1, date: 1 });
 AppointmentSchema.index({ client_id: 1 });
 AppointmentSchema.index({ status: 1 });
+AppointmentSchema.index({ guest_name: 1 });
 
 export const Appointment = mongoose.model<IAppointment>('Appointment', AppointmentSchema);

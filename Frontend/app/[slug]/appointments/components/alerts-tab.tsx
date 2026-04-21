@@ -41,14 +41,15 @@ export function AlertsTab({ orgId }: AlertsTabProps) {
     }
 
     const sendWhatsApp = (app: any) => {
-        const phone = app.client_id?.phone;
+        const phone = app.client_id?.phone || app.guest_phone;
         if (!phone) return toast.error("El cliente no tiene teléfono registrado");
 
         const cleanPhone = phone.replace(/\D/g, '');
         const dateStr = format(new Date(app.date), "EEEE d 'de' MMMM", { locale: es });
         const timeStr = format(new Date(app.date), 'HH:mm');
+        const clientName = app.client_id?.name || app.guest_name || 'Cliente';
 
-        const message = `Hola ${app.client_id.name}! Te escribimos para recordarte tu turno del día ${dateStr} a las ${timeStr} hs por: ${app.service_description}. Te esperamos!`;
+        const message = `Hola ${clientName}! Te escribimos para recordarte tu turno del día ${dateStr} a las ${timeStr} hs por: ${app.service_description}. Te esperamos!`;
         const url = `https://wa.me/${cleanPhone.startsWith('54') ? cleanPhone : '54' + cleanPhone}?text=${encodeURIComponent(message)}`;
 
         window.open(url, '_blank');
@@ -143,7 +144,7 @@ function AlertItem({ app, onSend }: { app: any; onSend: () => void }) {
                             <span className="text-[8px] font-bold text-slate-400 tracking-tighter uppercase mt-1">Hora</span>
                         </div>
                         <div className="space-y-1">
-                            <h4 className="font-black text-slate-900 capitalize leading-none">{app.client_id?.name || 'Cliente'}</h4>
+                            <h4 className="font-black text-slate-900 capitalize leading-none">{app.client_id?.name || app.guest_name || 'Cliente'}</h4>
                             <p className="text-xs font-medium text-slate-500 truncate max-w-[200px]">{app.service_description}</p>
                             <div className="flex items-center gap-2 mt-2">
                                 {app.reminder_sent ? (

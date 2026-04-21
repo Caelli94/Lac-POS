@@ -10,6 +10,9 @@ import { es } from 'date-fns/locale'
 import { appointmentService } from '@/services/appointmentService'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { AlertTriangle, Edit } from 'lucide-react'
+import { AppointmentModal } from './appointment-modal'
 
 interface CalendarTabProps {
     orgId: string;
@@ -21,6 +24,13 @@ export function CalendarTab({ orgId, canEdit, canDelete }: CalendarTabProps) {
     const [date, setDate] = useState<Date | undefined>(new Date())
     const [appointments, setAppointments] = useState<any[]>([])
     const [loading, setLoading] = useState(false)
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+    const [appointmentToDelete, setAppointmentToDelete] = useState<string | null>(null)
+    const [deleting, setDeleting] = useState(false)
+    const [notesModalOpen, setNotesModalOpen] = useState(false)
+    const [selectedNotes, setSelectedNotes] = useState('')
+    const [editModalOpen, setEditModalOpen] = useState(false)
+    const [appointmentToEdit, setAppointmentToEdit] = useState<any>(null)
 
     useEffect(() => {
         fetchAppointments()
@@ -48,6 +58,17 @@ export function CalendarTab({ orgId, canEdit, canDelete }: CalendarTabProps) {
         return format(appDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
     }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
+    const getStatusLabel = (status: string) => {
+        switch (status) {
+            case 'pending': return 'PENDIENTE';
+            case 'confirmed': return 'CONFIRMADO';
+            case 'completed': return 'COMPLETADO';
+            case 'cancelled': return 'CANCELADO';
+            case 'no-show': return 'AUSENTE';
+            default: return status.toUpperCase();
+        }
+    }
+
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'pending': return 'bg-amber-100 text-amber-700 border-amber-200';
@@ -58,16 +79,20 @@ export function CalendarTab({ orgId, canEdit, canDelete }: CalendarTabProps) {
         }
     }
 
-    const handleDelete = async (id: string) => {
-        if (!confirm("¿Estás seguro de que deseas eliminar este turno?")) return;
+    const handleDelete = async () => {
+        if (!appointmentToDelete) return;
+        setDeleting(true)
         try {
-            const res = await appointmentService.delete(id);
+            const res = await appointmentService.delete(appointmentToDelete);
             if (res.success) {
                 toast.success("Turno eliminado");
-                setAppointments(prev => prev.filter(a => a._id !== id));
+                setAppointments(prev => prev.filter(a => a._id !== appointmentToDelete));
+                setDeleteModalOpen(false);
             }
         } catch (error) {
             toast.error("Error al eliminar");
+        } finally {
+            setDeleting(false)
         }
     }
 
@@ -83,6 +108,15 @@ export function CalendarTab({ orgId, canEdit, canDelete }: CalendarTabProps) {
                             onSelect={setDate}
                             locale={es}
                             className="w-full"
+                            modifiers={{
+                                booked: appointments.map(app => new Date(app.date))
+                            }}
+                            modifiersStyles={{
+                                booked: { fontWeight: '900', color: '#6366f1', textDecoration: 'underline' }
+                            }}
+                            modifiersClassNames={{
+                                booked: "bg-indigo-50 text-indigo-600 font-bold border border-indigo-100 rounded-full"
+                            }}
                         />
                     </CardContent>
                 </Card>
@@ -132,16 +166,16 @@ export function CalendarTab({ orgId, canEdit, canDelete }: CalendarTabProps) {
                                             <div className="space-y-1">
                                                 <div className="flex items-center gap-2">
                                                     <h4 className="text-lg font-black text-slate-900 capitalize">
-                                                        {app.client_id?.name || 'Cliente sin nombre'}
+                                                        {app.client_id?.name || app.guest_name || 'Cliente sin nombre'}
                                                     </h4>
                                                     <Badge className={`rounded-lg py-0 px-2 text-[9px] font-black uppercase ${getStatusColor(app.status)}`}>
-                                                        {app.status}
+                                                        {getStatusLabel(app.status)}
                                                     </Badge>
                                                 </div>
                                                 <div className="flex flex-wrap gap-4 text-xs font-medium text-slate-500">
                                                     <span className="flex items-center gap-1">
                                                         <User size={14} className="text-indigo-400" />
-                                                        {app.client_id?.phone || 'Sin télefono'}
+                                                        {app.client_id?.phone || app.guest_phone || 'Sin télefono'}
                                                     </span>
                                                     <span className="flex items-center gap-1">
                                                         <CheckCircle2 size={14} className="text-emerald-400" />
@@ -153,8 +187,29 @@ export function CalendarTab({ orgId, canEdit, canDelete }: CalendarTabProps) {
 
                                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                             {app.notes && (canEdit || canDelete) && (
-                                                <Button variant="ghost" size="icon" className="rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50" title={app.notes}>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
+                                                    onClick={() => {
+                                                        setSelectedNotes(app.notes);
+                                                        setNotesModalOpen(true);
+                                                    }}
+                                                >
                                                     <MessageSquare size={18} />
+                                                </Button>
+                                            )}
+                                            {canEdit && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+                                                    onClick={() => {
+                                                        setAppointmentToEdit(app);
+                                                        setEditModalOpen(true);
+                                                    }}
+                                                >
+                                                    <Edit size={18} />
                                                 </Button>
                                             )}
                                             {canDelete && (
@@ -162,7 +217,10 @@ export function CalendarTab({ orgId, canEdit, canDelete }: CalendarTabProps) {
                                                     variant="ghost"
                                                     size="icon"
                                                     className="rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50"
-                                                    onClick={() => handleDelete(app._id)}
+                                                    onClick={() => {
+                                                        setAppointmentToDelete(app._id);
+                                                        setDeleteModalOpen(true);
+                                                    }}
                                                 >
                                                     <Trash2 size={18} />
                                                 </Button>
@@ -175,6 +233,58 @@ export function CalendarTab({ orgId, canEdit, canDelete }: CalendarTabProps) {
                     )}
                 </div>
             </div>
+
+            {/* MODAL DE ELIMINACIÓN */}
+            <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+                <DialogContent className="max-w-[400px] bg-white rounded-[2rem] p-8 border-none shadow-2xl z-[100]">
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-center">¿Eliminar Turno?</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex flex-col items-center text-center space-y-4">
+                        <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center text-destructive">
+                            <AlertTriangle size={32} />
+                        </div>
+                        <p className="text-sm font-medium text-slate-500">Esta acción no se puede deshacer. El turno será eliminado permanentemente.</p>
+                        <div className="w-full grid grid-cols-2 gap-3 mt-4">
+                            <Button variant="outline" onClick={() => setDeleteModalOpen(false)} className="rounded-xl h-12 font-bold uppercase text-[10px]">Cancelar</Button>
+                            <Button onClick={handleDelete} disabled={deleting} className="bg-destructive text-white rounded-xl h-12 font-black uppercase text-[10px]">
+                                {deleting ? 'Eliminando...' : 'Sí, Eliminar'}
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* MODAL DE NOTAS */}
+            <Dialog open={notesModalOpen} onOpenChange={setNotesModalOpen}>
+                <DialogContent className="max-w-[400px] bg-white rounded-[2rem] p-8 border-none shadow-2xl z-[100]">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-black uppercase tracking-tight">Notas del Turno</DialogTitle>
+                    </DialogHeader>
+                    <div className="pt-4">
+                        <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 text-slate-600 text-sm italic font-medium">
+                            "{selectedNotes}"
+                        </div>
+                        <Button onClick={() => setNotesModalOpen(false)} className="w-full mt-6 bg-slate-900 text-white rounded-xl h-12 font-black uppercase text-[10px]">
+                            Cerrar
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* MODAL DE EDICIÓN */}
+            <AppointmentModal
+                isOpen={editModalOpen}
+                onClose={() => {
+                    setEditModalOpen(false);
+                    setAppointmentToEdit(null);
+                }}
+                orgId={orgId}
+                onSuccess={() => {
+                    fetchAppointments();
+                }}
+                appointmentToEdit={appointmentToEdit}
+            />
         </div>
     )
 }
