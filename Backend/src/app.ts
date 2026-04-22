@@ -46,6 +46,8 @@ import checkRoutes from './routes/checkRoutes';
 import chatbotRoutes from './routes/chatbotRoutes';
 import integrationRoutes from './routes/integrationRoutes';
 import commissionRoutes from './routes/commissionRoutes';
+import professionalRoutes from './routes/professionalRoutes';
+import publicRoutes from './routes/publicRoutes';
 
 app.get('/', (req, res) => {
     res.send('API is running...');
@@ -76,6 +78,8 @@ app.use('/api/checks', checkRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/integrations', integrationRoutes);
 app.use('/api/commissions', commissionRoutes);
+app.use('/api/professionals', professionalRoutes);
+app.use('/api/public-booking', publicRoutes);
 
 
 

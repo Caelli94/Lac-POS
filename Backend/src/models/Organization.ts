@@ -3,6 +3,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface IOrganization extends Document {
     name: string;
     slug: string;
+    logo?: string;
     subscription_status?: string;
     address?: string;
     phone?: string;
@@ -115,6 +116,18 @@ export interface IOrganization extends Document {
                 last_update: Date;
             };
         };
+        appointments?: {
+            working_hours?: {
+                day: string;
+                enabled: boolean;
+                start: string;
+                end: string;
+            }[];
+            default_duration?: number;
+            whatsapp_template?: string;
+            self_booking_enabled?: boolean;
+            max_booking_days?: number;
+        };
     };
     barcodeSettings?: {
         enabled: boolean;
@@ -162,6 +175,7 @@ export interface IOrganization extends Document {
 const OrganizationSchema: Schema = new Schema({
     name: { type: String, required: true },
     slug: { type: String, required: true, unique: true },
+    logo: { type: String },
     subscription_status: { type: String, default: 'active' },
     address: { type: String },
     phone: { type: String },
@@ -221,6 +235,18 @@ const OrganizationSchema: Schema = new Schema({
                 day_count: { type: Number, default: 0 },
                 last_update: { type: Date, default: Date.now }
             }
+        },
+        appointments: {
+            working_hours: [{
+                day: { type: String },
+                enabled: { type: Boolean, default: true },
+                start: { type: String, default: '09:00' },
+                end: { type: String, default: '18:00' }
+            }],
+            default_duration: { type: Number, default: 30 },
+            whatsapp_template: { type: String, default: 'Hola {{client}}! Te recordamos tu turno el {{date}} a las {{time}} hs por {{service}}. Te esperamos!' },
+            self_booking_enabled: { type: Boolean, default: false },
+            max_booking_days: { type: Number, default: 30 }
         }
     },
     barcodeSettings: {

@@ -19,6 +19,7 @@ export const getAppointments = async (req: Request, res: Response) => {
 
         const appointments = await Appointment.find(query)
             .populate('client_id', 'name phone email')
+            .populate('professional_id', 'name specialty color')
             .sort({ date: 1 });
 
         res.json({ success: true, data: appointments });
@@ -32,7 +33,7 @@ export const getAppointments = async (req: Request, res: Response) => {
 // @route   POST /api/appointments
 export const createAppointment = async (req: any, res: Response) => {
     try {
-        const { organization_id, client_id, guest_name, guest_phone, date, service_description, notes } = req.body;
+        const { organization_id, client_id, guest_name, guest_phone, date, end_date, service_description, notes, professional_id } = req.body;
 
         if (!organization_id || (!client_id && !guest_name) || !date || !service_description) {
             return res.status(400).json({ success: false, message: 'Faltan campos obligatorios' });
@@ -44,13 +45,18 @@ export const createAppointment = async (req: any, res: Response) => {
             guest_name,
             guest_phone,
             date,
+            end_date,
             service_description,
             notes,
+            professional_id,
             status: 'pending',
-            created_by: req.user._id
+            created_by: req.user?._id || req.user?.id
         });
 
-        const populated = await appointment.populate('client_id', 'name phone email');
+        const populated = await appointment.populate([
+            { path: 'client_id', select: 'name phone email' },
+            { path: 'professional_id', select: 'name specialty color' }
+        ]);
 
         res.status(201).json({ success: true, data: populated });
     } catch (error) {
@@ -67,7 +73,8 @@ export const updateAppointment = async (req: Request, res: Response) => {
         const updates = req.body;
 
         const appointment = await Appointment.findByIdAndUpdate(id, updates, { new: true })
-            .populate('client_id', 'name phone email');
+            .populate('client_id', 'name phone email')
+            .populate('professional_id', 'name specialty color');
 
         if (!appointment) {
             return res.status(404).json({ success: false, message: 'Turno no encontrado' });

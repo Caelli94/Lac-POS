@@ -13,7 +13,8 @@ export interface IAppointment extends Document {
     notes?: string;
     reminder_sent: boolean;
     reminder_sent_at?: Date;
-    created_by: mongoose.Types.ObjectId;
+    professional_id?: mongoose.Types.ObjectId;
+    created_by?: mongoose.Types.ObjectId;
     deleted: boolean;
 }
 
@@ -34,7 +35,8 @@ const AppointmentSchema: Schema = new Schema({
     notes: { type: String },
     reminder_sent: { type: Boolean, default: false },
     reminder_sent_at: { type: Date },
-    created_by: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    professional_id: { type: Schema.Types.ObjectId, ref: 'Professional' },
+    created_by: { type: Schema.Types.ObjectId, ref: 'User' },
     deleted: { type: Boolean, default: false }
 }, {
     timestamps: true

@@ -11,8 +11,9 @@ import { appointmentService } from '@/services/appointmentService'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { AlertTriangle, Edit } from 'lucide-react'
+import { AlertTriangle, Edit, Briefcase, Filter } from 'lucide-react'
 import { AppointmentModal } from './appointment-modal'
+import { professionalService } from '@/services/professionalService'
 
 interface CalendarTabProps {
     orgId: string;
@@ -31,10 +32,18 @@ export function CalendarTab({ orgId, canEdit, canDelete }: CalendarTabProps) {
     const [selectedNotes, setSelectedNotes] = useState('')
     const [editModalOpen, setEditModalOpen] = useState(false)
     const [appointmentToEdit, setAppointmentToEdit] = useState<any>(null)
+    const [professionals, setProfessionals] = useState<any[]>([])
+    const [selectedProfFilter, setSelectedProfFilter] = useState<string>('all')
 
     useEffect(() => {
         fetchAppointments()
+        fetchProfessionals()
     }, [orgId])
+
+    const fetchProfessionals = async () => {
+        const res = await professionalService.getAll(orgId)
+        if (res.success) setProfessionals(res.data)
+    }
 
     const fetchAppointments = async () => {
         setLoading(true)
@@ -51,11 +60,13 @@ export function CalendarTab({ orgId, canEdit, canDelete }: CalendarTabProps) {
         }
     }
 
-    // Filtrar turnos para la fecha seleccionada
+    // Filtrar turnos para la fecha seleccionada y profesional
     const dailyAppointments = appointments.filter(app => {
         if (!date) return false;
         const appDate = new Date(app.date);
-        return format(appDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
+        const matchesDate = format(appDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
+        const matchesProf = selectedProfFilter === 'all' || (app.professional_id?._id || app.professional_id) === selectedProfFilter;
+        return matchesDate && matchesProf;
     }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     const getStatusLabel = (status: string) => {
@@ -130,12 +141,22 @@ export function CalendarTab({ orgId, canEdit, canDelete }: CalendarTabProps) {
 
             {/* LADO DERECHO: AGENDA DEL DÍA */}
             <div className="lg:col-span-8 flex flex-col space-y-6">
-                <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">
-                        Agenda: {date ? format(date, "EEEE d 'de' MMMM", { locale: es }) : 'Seleccione una fecha'}
-                    </h3>
-                    <Badge variant="outline" className="rounded-lg font-bold border-slate-200 bg-white">
-                        {dailyAppointments.length} Compromisos
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <Filter size={18} className="text-slate-400" />
+                        <select 
+                            className="bg-white border-slate-200 rounded-xl px-4 py-2 text-xs font-black uppercase tracking-tight outline-none focus:ring-2 focus:ring-indigo-600/10 cursor-pointer shadow-sm"
+                            value={selectedProfFilter}
+                            onChange={(e) => setSelectedProfFilter(e.target.value)}
+                        >
+                            <option value="all">TODOS LOS PROFESIONALES</option>
+                            {professionals.map(p => (
+                                <option key={p._id} value={p._id}>{p.name.toUpperCase()}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <Badge variant="outline" className="rounded-lg font-bold border-slate-200 bg-white px-4 py-2">
+                        {dailyAppointments.length} Turnos {selectedProfFilter !== 'all' ? 'del Profesional' : ''}
                     </Badge>
                 </div>
 
@@ -172,7 +193,7 @@ export function CalendarTab({ orgId, canEdit, canDelete }: CalendarTabProps) {
                                                         {getStatusLabel(app.status)}
                                                     </Badge>
                                                 </div>
-                                                <div className="flex flex-wrap gap-4 text-xs font-medium text-slate-500">
+                                                 <div className="flex flex-wrap gap-4 text-xs font-medium text-slate-500">
                                                     <span className="flex items-center gap-1">
                                                         <User size={14} className="text-indigo-400" />
                                                         {app.client_id?.phone || app.guest_phone || 'Sin télefono'}
@@ -181,6 +202,14 @@ export function CalendarTab({ orgId, canEdit, canDelete }: CalendarTabProps) {
                                                         <CheckCircle2 size={14} className="text-emerald-400" />
                                                         {app.service_description}
                                                     </span>
+                                                    {app.professional_id && (
+                                                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-50 border border-slate-100" style={{ color: app.professional_id.color }}>
+                                                            <Briefcase size={12} />
+                                                            <span className="font-bold text-[10px] uppercase">
+                                                                {app.professional_id.name}
+                                                            </span>
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>

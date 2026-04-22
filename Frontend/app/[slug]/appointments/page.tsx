@@ -8,6 +8,7 @@ import { organizationService } from '@/services/organizationService'
 import { authService } from '@/services/authService'
 import { CalendarTab } from './components/calendar-tab'
 import { AlertsTab } from './components/alerts-tab'
+import { ConfigTab } from './components/config-tab'
 import { AppointmentModal } from './components/appointment-modal'
 
 export default function AppointmentsPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -145,10 +146,7 @@ export default function AppointmentsPage({ params }: { params: Promise<{ slug: s
 
                 {isTabEnabled('settings') && (
                     <TabsContent value="settings">
-                        <div className="w-full h-[60vh] flex flex-col items-center justify-center p-12 bg-white rounded-3xl border border-slate-200 shadow-sm text-slate-300">
-                            <Settings size={64} className="mb-4 text-slate-100" />
-                            <p className="font-black uppercase tracking-widest text-xs text-slate-400">Configuración del Turnero</p>
-                        </div>
+                        <ConfigTab org={org} />
                     </TabsContent>
                 )}
             </Tabs>
@@ -159,6 +157,7 @@ export default function AppointmentsPage({ params }: { params: Promise<{ slug: s
                 onClose={() => setIsModalOpen(false)}
                 orgId={orgId}
                 onSuccess={() => setRefreshKey(prev => prev + 1)}
+                defaultDuration={org?.settings?.appointments?.default_duration || 30}
             />
         </div>
     )

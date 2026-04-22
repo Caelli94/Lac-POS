@@ -11,7 +11,8 @@ import { customerService } from '@/services/customerService'
 import { appointmentService } from '@/services/appointmentService'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle, Briefcase } from 'lucide-react'
+import { professionalService } from '@/services/professionalService'
 
 interface AppointmentModalProps {
     isOpen: boolean;
@@ -20,26 +21,36 @@ interface AppointmentModalProps {
     onSuccess: () => void;
     initialDate?: Date;
     appointmentToEdit?: any;
+    defaultDuration?: number;
 }
 
-export function AppointmentModal({ isOpen, onClose, orgId, onSuccess, initialDate, appointmentToEdit }: AppointmentModalProps) {
+export function AppointmentModal({ isOpen, onClose, orgId, onSuccess, initialDate, appointmentToEdit, defaultDuration = 30 }: AppointmentModalProps) {
     const [searchQuery, setSearchQuery] = useState('')
     const [customers, setCustomers] = useState<any[]>([])
     const [selectedCustomer, setSelectedCustomer] = useState<any>(null)
     const [date, setDate] = useState(initialDate ? format(initialDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'))
     const [time, setTime] = useState('09:00')
+    const [duration, setDuration] = useState(defaultDuration)
     const [service, setService] = useState('')
     const [notes, setNotes] = useState('')
     const [phone, setPhone] = useState('')
     const [loading, setLoading] = useState(false)
     const [searching, setSearching] = useState(false)
     const [showPhoneWarning, setShowPhoneWarning] = useState(false)
+    const [professionals, setProfessionals] = useState<any[]>([])
+    const [selectedProfessional, setSelectedProfessional] = useState<string>('')
     
     const phoneInputRef = useRef<HTMLInputElement>(null)
 
     const isEditMode = !!appointmentToEdit;
 
     useEffect(() => {
+        const fetchProfessionals = async () => {
+            const res = await professionalService.getAll(orgId)
+            if (res.success) setProfessionals(res.data)
+        }
+        fetchProfessionals()
+
         if (appointmentToEdit) {
             if (appointmentToEdit.client_id) {
                 setSelectedCustomer(appointmentToEdit.client_id);
@@ -49,16 +60,23 @@ export function AppointmentModal({ isOpen, onClose, orgId, onSuccess, initialDat
             const appDate = new Date(appointmentToEdit.date);
             setDate(format(appDate, 'yyyy-MM-dd'));
             setTime(format(appDate, 'HH:mm'));
+            if (appointmentToEdit.end_date) {
+                const diff = (new Date(appointmentToEdit.end_date).getTime() - appDate.getTime()) / (1000 * 60);
+                setDuration(diff);
+            } else {
+                setDuration(defaultDuration);
+            }
             setService(appointmentToEdit.service_description || '');
             setNotes(appointmentToEdit.notes || '');
             setPhone(appointmentToEdit.client_id?.phone || appointmentToEdit.guest_phone || '');
+            setSelectedProfessional(appointmentToEdit.professional_id?._id || appointmentToEdit.professional_id || '');
         } else {
             resetForm();
             if (initialDate) {
                 setDate(format(initialDate, 'yyyy-MM-dd'));
             }
         }
-    }, [appointmentToEdit, initialDate, isOpen]);
+    }, [appointmentToEdit, initialDate, isOpen, orgId]);
 
     // Buscador reactivo de clientes
     useEffect(() => {
@@ -109,14 +127,18 @@ export function AppointmentModal({ isOpen, onClose, orgId, onSuccess, initialDat
         setLoading(true)
         try {
             const appointmentDate = new Date(`${date}T${time}:00`);
+            const endDateTime = new Date(appointmentDate.getTime() + duration * 60000);
+            
             const payload = {
                 organization_id: orgId,
-                client_id: selectedCustomer ? selectedCustomer._id : undefined,
+                client_id: selectedCustomer ? (selectedCustomer._id || selectedCustomer.id) : undefined,
                 guest_name: !selectedCustomer ? searchQuery : undefined,
                 guest_phone: phone,
                 date: appointmentDate,
+                end_date: endDateTime,
                 service_description: service,
-                notes
+                notes,
+                professional_id: selectedProfessional || undefined
             }
 
             const res = isEditMode 
@@ -146,6 +168,7 @@ export function AppointmentModal({ isOpen, onClose, orgId, onSuccess, initialDat
         setNotes('')
         setPhone('')
         setTime('07:00')
+        setSelectedProfessional('')
     }
 
     const handleSelectCustomer = (c: any) => {
@@ -217,6 +240,23 @@ export function AppointmentModal({ isOpen, onClose, orgId, onSuccess, initialDat
                             )}
                         </div>
 
+                        {/* SELECCIÓN DE PROFESIONAL */}
+                        <div className="space-y-2 md:col-span-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                                <Briefcase size={12} /> Profesional Asignado
+                            </Label>
+                            <select 
+                                className="w-full h-12 bg-slate-50 border-slate-200 rounded-xl px-4 font-bold text-slate-900 focus:ring-2 focus:ring-slate-950/10 outline-none appearance-none cursor-pointer"
+                                value={selectedProfessional}
+                                onChange={(e) => setSelectedProfessional(e.target.value)}
+                            >
+                                <option value="">Cualquier profesional (Sin asignar)</option>
+                                {professionals.map(p => (
+                                    <option key={p._id} value={p._id}>{p.name} - {p.specialty}</option>
+                                ))}
+                            </select>
+                        </div>
+
                         <div className="space-y-2 md:col-span-2">
                             <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Teléfono (WhatsApp)</Label>
                             <Input
@@ -252,6 +292,31 @@ export function AppointmentModal({ isOpen, onClose, orgId, onSuccess, initialDat
                                     onChange={(e) => setTime(e.target.value)}
                                     required
                                 />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2 md:col-span-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Duración (Minutos)</Label>
+                            <div className="flex items-center gap-3">
+                                <Input 
+                                    type="number" 
+                                    className="h-12 bg-slate-50 border-slate-200 rounded-xl font-bold text-slate-900 focus:ring-2 focus:ring-slate-950/10"
+                                    value={duration} 
+                                    onChange={(e) => setDuration(Number(e.target.value))} 
+                                />
+                                <div className="flex gap-2">
+                                    {[15, 30, 45, 60].map(m => (
+                                        <Button 
+                                            key={m} 
+                                            type="button"
+                                            variant="outline" 
+                                            onClick={() => setDuration(m)}
+                                            className={`h-12 px-4 rounded-xl font-black text-[10px] ${duration === m ? 'bg-indigo-600 text-white border-indigo-600' : 'text-slate-500'}`}
+                                        >
+                                            {m}'
+                                        </Button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
 
