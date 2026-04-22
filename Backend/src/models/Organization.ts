@@ -127,6 +127,7 @@ export interface IOrganization extends Document {
             whatsapp_template?: string;
             self_booking_enabled?: boolean;
             max_booking_days?: number;
+            whatsapp_number?: string;
         };
     };
     barcodeSettings?: {
@@ -246,7 +247,8 @@ const OrganizationSchema: Schema = new Schema({
             default_duration: { type: Number, default: 30 },
             whatsapp_template: { type: String, default: 'Hola {{client}}! Te recordamos tu turno el {{date}} a las {{time}} hs por {{service}}. Te esperamos!' },
             self_booking_enabled: { type: Boolean, default: false },
-            max_booking_days: { type: Number, default: 30 }
+            max_booking_days: { type: Number, default: 30 },
+            whatsapp_number: { type: String, default: '' }
         }
     },
     barcodeSettings: {

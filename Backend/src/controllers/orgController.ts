@@ -373,6 +373,10 @@ export const updateOrganization = async (req: Request, res: Response) => {
             };
         }
 
+        if (req.body.settings) {
+            org.markModified('settings');
+        }
+
         await org.save();
         res.json(org);
     } catch (error) {

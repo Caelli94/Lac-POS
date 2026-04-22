@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { format, addDays, startOfDay, isBefore, parseISO, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { CalendarDays, Clock, CheckCircle2, User, Briefcase, ChevronRight, ChevronLeft, Calendar as CalendarIcon, MapPin, Phone, Globe, X } from 'lucide-react'
+import { CalendarDays, Clock, CheckCircle2, User, Briefcase, ChevronRight, ChevronLeft, Calendar as CalendarIcon, MapPin, Phone, Globe, X, MessageSquare } from 'lucide-react'
 import { toast } from 'sonner'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
@@ -183,6 +183,52 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
             <p className="text-slate-500 font-medium max-w-xs">Lo sentimos, este link de reserva no es válido o el comercio lo ha desactivado.</p>
         </div>
     );
+
+    // Pantalla de "Reservas Pausadas" si el dueño desactivó la landing
+    if (!org.settings?.appointments?.self_booking_enabled) {
+        return (
+            <div className="min-h-screen bg-slate-50 font-sans flex items-center justify-center p-6">
+                <div className="max-w-md w-full bg-white rounded-[3rem] shadow-2xl shadow-indigo-900/10 border border-slate-100 p-12 text-center space-y-8 animate-in fade-in zoom-in-95 duration-700">
+                    <div className="w-24 h-24 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                        <CalendarIcon size={48} className="opacity-50" />
+                        <X size={24} className="absolute mt-12 ml-12 bg-white rounded-full p-1 border-4 border-white text-rose-500" />
+                    </div>
+                    
+                    <div className="space-y-4">
+                        <h1 className="text-2xl font-black uppercase tracking-tight text-slate-900">Reservas Pausadas</h1>
+                        <p className="text-sm font-medium text-slate-500 leading-relaxed">
+                            {org.name} no está aceptando reservas online en este momento. Por favor, intenta más tarde o contáctanos directamente.
+                        </p>
+                    </div>
+
+                    <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 space-y-4">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Canales de contacto</p>
+                        <div className="flex justify-center gap-6 text-indigo-600">
+                            {org.phone && (
+                                <a href={`tel:${org.phone}`} className="flex flex-col items-center gap-2 hover:scale-110 transition-transform">
+                                    <div className="p-3 bg-white rounded-2xl shadow-sm border border-slate-200"><Phone size={20} /></div>
+                                    <span className="text-[10px] font-bold uppercase">Llamar</span>
+                                </a>
+                            )}
+                            <a 
+                                href={`https://wa.me/549${(org.settings?.appointments?.whatsapp_number || org.phone)?.replace(/[^0-9]/g, '')}`} 
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex flex-col items-center gap-2 hover:scale-110 transition-transform"
+                            >
+                                <div className="p-3 bg-white rounded-2xl shadow-sm border border-slate-200"><MessageSquare size={20} /></div>
+                                <span className="text-[10px] font-bold uppercase">WhatsApp</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div className="pt-4">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-300">Powered by LAC POS</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">

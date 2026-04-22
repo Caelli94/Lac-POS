@@ -192,7 +192,8 @@ export function ConfigTab({ org }: ConfigTabProps) {
                 default_duration: org.settings.appointments.default_duration || 30,
                 whatsapp_template: org.settings.appointments.whatsapp_template || 'Hola {{client}}! Te recordamos tu turno el {{date}} a las {{time}} hs por {{service}}. Te esperamos!',
                 self_booking_enabled: org.settings.appointments.self_booking_enabled || false,
-                max_booking_days: org.settings.appointments.max_booking_days || 30
+                max_booking_days: org.settings.appointments.max_booking_days || 30,
+                whatsapp_number: org.settings.appointments.whatsapp_number || ''
             })
         }
     }, [org])
@@ -601,6 +602,17 @@ export function ConfigTab({ org }: ConfigTabProps) {
 
                             {settings.self_booking_enabled && (
                                 <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-black uppercase text-slate-400">WhatsApp de Reservas (Ej: 3584123456)</Label>
+                                        <Input 
+                                            value={settings.whatsapp_number || ''}
+                                            onChange={(e) => setSettings({...settings, whatsapp_number: e.target.value})}
+                                            placeholder="3584000000"
+                                            className="h-12 rounded-xl bg-white border-slate-200 font-bold text-slate-900"
+                                        />
+                                        <p className="text-[10px] font-medium text-indigo-200 uppercase">Sin el 0 y sin el 15. Usaremos 549 por defecto.</p>
+                                    </div>
+
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-black uppercase text-slate-400">Ventana de Reserva (Días)</Label>
                                         <div className="flex items-center gap-4">

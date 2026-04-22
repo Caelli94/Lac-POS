@@ -64,7 +64,7 @@ export function AIChatWidget() {
         const checkAccess = async () => {
             try {
                 // Solo validar en rutas de la app (que tienen slug) o si es admin
-                if (pathname === '/login' || pathname === '/') {
+                if (pathname === '/login' || pathname === '/' || pathname?.startsWith('/booking/')) {
                     setIsVisible(false);
                     return;
                 }
