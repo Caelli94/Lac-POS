@@ -155,12 +155,12 @@ export const loginUser = async (req: Request, res: Response) => {
             const { remember } = req.body;
 
             // Cookie Options
+            const isProd = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
             const cookieOptions: any = {
                 httpOnly: true,
-                // Render/Vercel is 'production' HTTPS -> secure: true, sameSite: 'none'
-                // Localhost is 'development' HTTP -> secure: false, sameSite: 'lax'
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+                // Cross-site cookies (Vercel <-> Render) require SameSite: None and Secure: True
+                secure: isProd,
+                sameSite: isProd ? 'none' : 'lax',
             };
 
             // IF Remember Me is checked -> 30 Days persistence
