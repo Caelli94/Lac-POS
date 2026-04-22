@@ -35,7 +35,8 @@ export const authService = {
             headers: {
                 'Content-Type': 'application/json'
             },
-            credentials: 'include'
+            credentials: 'include',
+            cache: 'no-store'
         });
 
         if (!res.ok) return null;
