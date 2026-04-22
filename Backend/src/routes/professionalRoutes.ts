@@ -7,6 +7,7 @@ const router = Router();
 router.use(protect);
 
 router.get('/:orgId', professionalController.getProfessionals);
+router.get('/availability/:id', professionalController.getAvailability);
 router.post('/', professionalController.createProfessional);
 router.put('/:id', professionalController.updateProfessional);
 router.delete('/:id', professionalController.deleteProfessional);

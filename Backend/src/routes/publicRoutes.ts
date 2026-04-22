@@ -6,6 +6,7 @@ const router = Router();
 // Estas rutas NO requieren el middleware de auth
 router.get('/org/:slug', publicBookingController.getOrgPublicDetails);
 router.get('/professionals/:orgId', publicBookingController.getProfessionals);
+router.get('/availability/:id', publicBookingController.getAvailability);
 router.post('/book', publicBookingController.createAppointment);
 
 export default router;

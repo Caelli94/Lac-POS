@@ -6,9 +6,9 @@ const router = express.Router();
 
 router.use(protect);
 
-router.get('/:orgId', checkPermission('appointments', 'view'), getAppointments);
-router.post('/', checkPermission('appointments', 'create'), createAppointment);
-router.put('/:id', checkPermission('appointments', 'edit'), updateAppointment);
-router.delete('/:id', checkPermission('appointments', 'delete'), deleteAppointment);
+router.get('/:orgId', getAppointments);
+router.post('/', createAppointment);
+router.put('/:id', updateAppointment);
+router.delete('/:id', deleteAppointment);
 
 export default router;

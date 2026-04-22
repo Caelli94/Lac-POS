@@ -57,5 +57,19 @@ export const professionalService = {
             console.error(error);
             return { success: false, message: 'Error deleting professional' };
         }
+    },
+
+    async getAvailability(id: string, date: string) {
+        try {
+            const response = await fetch(`${API_URL}/professionals/availability/${id}?date=${date}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+            return await response.json();
+        } catch (error) {
+            console.error(error);
+            return { success: false, message: 'Error fetching availability' };
+        }
     }
 };

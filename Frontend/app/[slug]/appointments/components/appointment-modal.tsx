@@ -39,6 +39,8 @@ export function AppointmentModal({ isOpen, onClose, orgId, onSuccess, initialDat
     const [showPhoneWarning, setShowPhoneWarning] = useState(false)
     const [professionals, setProfessionals] = useState<any[]>([])
     const [selectedProfessional, setSelectedProfessional] = useState<string>('')
+    const [availableSlots, setAvailableSlots] = useState<any[]>([])
+    const [loadingSlots, setLoadingSlots] = useState(false)
     
     const phoneInputRef = useRef<HTMLInputElement>(null)
 
@@ -77,6 +79,41 @@ export function AppointmentModal({ isOpen, onClose, orgId, onSuccess, initialDat
             }
         }
     }, [appointmentToEdit, initialDate, isOpen, orgId]);
+
+    // Cargar slots disponibles cuando cambia profesional o fecha
+    useEffect(() => {
+        const fetchSlots = async () => {
+            if (!selectedProfessional || !date) {
+                setAvailableSlots([]);
+                return;
+            }
+            setLoadingSlots(true);
+            try {
+                const res = await professionalService.getAvailability(selectedProfessional, date);
+                if (res.success) {
+                    setAvailableSlots(res.data);
+                    // Si estamos editando, asegurar que la hora actual esté en la lista aunque esté ocupada
+                    if (isEditMode && appointmentToEdit) {
+                        const currentAppTime = format(new Date(appointmentToEdit.date), 'HH:mm');
+                        if (!res.data.find((s: any) => s.time === currentAppTime)) {
+                            // No hace falta agregarlo si ya está, pero por si acaso
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setLoadingSlots(false);
+            }
+        }
+        fetchSlots();
+
+        // Actualizar duración predeterminada si el profesional la tiene
+        const prof = professionals.find(p => p._id === selectedProfessional);
+        if (prof?.appointment_duration && !isEditMode) {
+            setDuration(prof.appointment_duration);
+        }
+    }, [selectedProfessional, date, professionals]);
 
     // Buscador reactivo de clientes
     useEffect(() => {
@@ -281,18 +318,51 @@ export function AppointmentModal({ isOpen, onClose, orgId, onSuccess, initialDat
                                 />
                             </div>
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-2 md:col-span-2">
                             <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Hora</Label>
-                            <div className="relative">
-                                <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 h-5 w-5 pointer-events-none" />
-                                <Input
-                                    type="time"
-                                    className="pl-12 h-12 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-950/10"
-                                    value={time}
-                                    onChange={(e) => setTime(e.target.value)}
-                                    required
-                                />
-                            </div>
+                            {loadingSlots ? (
+                                <div className="h-12 flex items-center gap-2 px-4 bg-slate-50 rounded-xl border border-slate-100 text-[10px] font-black uppercase text-slate-400 italic">
+                                    <div className="animate-spin h-3 w-3 border-2 border-slate-400 border-t-transparent rounded-full"></div>
+                                    Consultando disponibilidad...
+                                </div>
+                            ) : !selectedProfessional ? (
+                                <div className="h-12 flex items-center px-4 bg-amber-50 rounded-xl border border-amber-100 text-[10px] font-black uppercase text-amber-600 italic">
+                                    Seleccioná un profesional para ver horarios
+                                </div>
+                            ) : availableSlots.length === 0 ? (
+                                <div className="h-12 flex items-center px-4 bg-rose-50 rounded-xl border border-rose-100 text-[10px] font-black uppercase text-rose-600 italic">
+                                    No hay horarios disponibles para este día
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
+                                    {availableSlots.map((slot, idx) => {
+                                        const isSelected = time === slot.time;
+                                        // En modo edición, permitimos seleccionar la hora actual del turno aunque diga "available: false"
+                                        const isCurrentEditTime = isEditMode && appointmentToEdit && format(new Date(appointmentToEdit.date), 'HH:mm') === slot.time;
+                                        const canSelect = slot.available || isCurrentEditTime;
+
+                                        return (
+                                            <button
+                                                key={idx}
+                                                type="button"
+                                                disabled={!canSelect}
+                                                onClick={() => setTime(slot.time)}
+                                                className={`
+                                                    h-10 rounded-xl text-[11px] font-black transition-all flex items-center justify-center
+                                                    ${isSelected 
+                                                        ? 'bg-slate-900 text-white shadow-lg scale-105' 
+                                                        : canSelect
+                                                            ? 'bg-white border border-slate-200 text-slate-900 hover:border-indigo-500 hover:text-indigo-600'
+                                                            : 'bg-slate-100 text-slate-300 cursor-not-allowed opacity-50'
+                                                    }
+                                                `}
+                                            >
+                                                {slot.time}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
 
                         <div className="space-y-2 md:col-span-2">

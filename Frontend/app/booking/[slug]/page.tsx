@@ -29,6 +29,8 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
     const [notes, setNotes] = useState('');
+    const [availableSlots, setAvailableSlots] = useState<any[]>([]);
+    const [loadingSlots, setLoadingSlots] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -44,6 +46,21 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
         };
         fetchData();
     }, [slug]);
+
+    useEffect(() => {
+        const fetchSlots = async () => {
+            if (!selectedProfessional || !selectedDate) return;
+            setLoadingSlots(true);
+            const res = await publicBookingService.getAvailability(selectedProfessional._id, selectedDate);
+            if (res.success) {
+                setAvailableSlots(res.data);
+            } else {
+                setAvailableSlots([]);
+            }
+            setLoadingSlots(false);
+        };
+        fetchSlots();
+    }, [selectedProfessional, selectedDate]);
 
     const handleBook = async () => {
         if (!name || !phone || !service) return toast.error("Por favor completa los datos de contacto y el servicio.");
@@ -72,43 +89,8 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
         setLoading(false);
     };
 
-    const getAvailableSlots = () => {
-        if (!selectedDate) return [];
-        const dateObj = new Date(selectedDate + 'T00:00:00');
-        const dayName = format(dateObj, 'eeee', { locale: es }).charAt(0).toUpperCase() + format(dateObj, 'eeee', { locale: es }).slice(1);
-        
-        const workingHours = selectedProfessional 
-            ? selectedProfessional.working_hours 
-            : org.settings?.appointments?.working_hours;
-
-        const dayConfig = workingHours?.find((h: any) => h.day === dayName);
-        
-        if (!dayConfig || !dayConfig.enabled) return [];
-
-        const slots: string[] = [];
-        const duration = selectedProfessional?.appointment_duration || org.settings?.appointments?.default_duration || 30;
-
-        const ranges = dayConfig.slots && dayConfig.slots.length > 0 
-            ? dayConfig.slots 
-            : [{ start: dayConfig.start || '09:00', end: dayConfig.end || '18:00' }];
-
-        ranges.forEach((range: any) => {
-            let current = range.start;
-            const end = range.end;
-
-            while (current < end) {
-                slots.push(current);
-                const [h, m] = current.split(':').map(Number);
-                let nextM = m + duration;
-                let nextH = h + Math.floor(nextM / 60);
-                nextM = nextM % 60;
-                if (nextH >= 24) break;
-                current = `${String(nextH).padStart(2, '0')}:${String(nextM).padStart(2, '0')}`;
-                if (current > end) break;
-            }
-        });
-
-        return slots;
+    const getDisplaySlots = () => {
+        return availableSlots.filter(s => s.available).map(s => s.time);
     };
 
     const renderCalendar = () => {
@@ -352,21 +334,27 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
 
                                 <div className="space-y-3">
                                     <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Horarios Disponibles</Label>
-                                    <div className="grid grid-cols-3 gap-2">
-                                        {getAvailableSlots().length > 0 ? getAvailableSlots().map(t => (
-                                            <button 
-                                                key={t}
-                                                onClick={() => setSelectedTime(t)}
-                                                className={`h-11 rounded-xl border-2 font-bold text-xs transition-all ${selectedTime === t ? 'border-indigo-600 bg-indigo-600 text-white shadow-md' : 'border-slate-100 bg-white hover:border-indigo-200 text-slate-600'}`}
-                                            >
-                                                {t}
-                                            </button>
-                                        )) : (
-                                            <div className="col-span-3 py-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                                                <p className="text-xs font-medium text-slate-400">No hay horarios disponibles para este día.</p>
-                                            </div>
-                                        )}
-                                    </div>
+                                    {loadingSlots ? (
+                                        <div className="flex justify-center py-8">
+                                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {getDisplaySlots().length > 0 ? getDisplaySlots().map(t => (
+                                                <button 
+                                                    key={t}
+                                                    onClick={() => setSelectedTime(t)}
+                                                    className={`h-11 rounded-xl border-2 font-bold text-xs transition-all ${selectedTime === t ? 'border-indigo-600 bg-indigo-600 text-white shadow-md' : 'border-slate-100 bg-white hover:border-indigo-200 text-slate-600'}`}
+                                                >
+                                                    {t}
+                                                </button>
+                                            )) : (
+                                                <div className="col-span-3 py-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                                                    <p className="text-xs font-medium text-slate-400">No hay horarios disponibles para este día.</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

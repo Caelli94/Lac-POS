@@ -33,5 +33,14 @@ export const publicBookingService = {
         } catch (error) {
             return { success: false, message: 'Error al procesar reserva' };
         }
+    },
+
+    getAvailability: async (profId: string, date: string) => {
+        try {
+            const res = await api.get(`/public-booking/availability/${profId}?date=${date}`);
+            return res.data;
+        } catch (error) {
+            return { success: false, message: 'Error al obtener disponibilidad' };
+        }
     }
 };

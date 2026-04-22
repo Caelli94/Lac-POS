@@ -34,11 +34,37 @@ export function CalendarTab({ orgId, canEdit, canDelete }: CalendarTabProps) {
     const [appointmentToEdit, setAppointmentToEdit] = useState<any>(null)
     const [professionals, setProfessionals] = useState<any[]>([])
     const [selectedProfFilter, setSelectedProfFilter] = useState<string>('all')
+    const [slots, setSlots] = useState<any[]>([])
+    const [loadingSlots, setLoadingSlots] = useState(false)
 
     useEffect(() => {
         fetchAppointments()
         fetchProfessionals()
     }, [orgId])
+
+    useEffect(() => {
+        if (selectedProfFilter !== 'all' && date) {
+            fetchAvailability()
+        } else {
+            setSlots([])
+        }
+    }, [selectedProfFilter, date])
+
+    const fetchAvailability = async () => {
+        if (!date || selectedProfFilter === 'all') return;
+        setLoadingSlots(true)
+        try {
+            const formattedDate = format(date, 'yyyy-MM-dd')
+            const res = await professionalService.getAvailability(selectedProfFilter, formattedDate)
+            if (res.success) {
+                setSlots(res.data)
+            }
+        } catch (error) {
+            console.error(error)
+        } finally {
+            setLoadingSlots(false)
+        }
+    }
 
     const fetchProfessionals = async () => {
         const res = await professionalService.getAll(orgId)
@@ -161,17 +187,66 @@ export function CalendarTab({ orgId, canEdit, canDelete }: CalendarTabProps) {
                 </div>
 
                 <div className="flex-1 space-y-4 overflow-y-auto pr-2 custom-scrollbar min-h-[400px]">
-                    {loading ? (
+                    {loading || loadingSlots ? (
                         <div className="flex flex-col items-center justify-center h-64 text-slate-400">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mb-4"></div>
                             <p className="text-xs font-black uppercase tracking-widest italic">Sincronizando Turnos...</p>
                         </div>
+                    ) : selectedProfFilter !== 'all' ? (
+                        /* VISTA DE SLOTS CUANDO HAY PROFESIONAL SELECCIONADO */
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {slots.length === 0 ? (
+                                <div className="col-span-full flex flex-col items-center justify-center h-64 bg-slate-50/50 rounded-[2rem] border-2 border-dashed border-slate-200">
+                                    <Clock size={48} className="text-slate-200 mb-4" />
+                                    <p className="text-slate-400 font-bold text-sm italic">Sin disponibilidad para este día.</p>
+                                </div>
+                            ) : (
+                                slots.map((slot, idx) => {
+                                    const appointment = dailyAppointments.find(a => format(new Date(a.date), 'HH:mm') === slot.time);
+                                    
+                                    return (
+                                        <Card 
+                                            key={idx} 
+                                            className={`
+                                                relative overflow-hidden transition-all duration-300 rounded-2xl border-none shadow-sm
+                                                ${slot.available 
+                                                    ? 'bg-white hover:shadow-lg hover:scale-105 cursor-pointer ring-1 ring-slate-100' 
+                                                    : 'bg-slate-900 text-white opacity-95 shadow-inner'
+                                                }
+                                            `}
+                                            onClick={() => {
+                                                if (slot.available && canEdit) {
+                                                    // Aquí podrías abrir el modal con el horario pre-seteado
+                                                    toast.info(`Agendando a las ${slot.time}`);
+                                                }
+                                            }}
+                                        >
+                                            <CardContent className="p-4 flex flex-col items-center justify-center h-24">
+                                                <span className={`text-xl font-black ${slot.available ? 'text-slate-900' : 'text-white'}`}>
+                                                    {slot.time}
+                                                </span>
+                                                <span className={`text-[9px] font-bold uppercase tracking-widest ${slot.available ? 'text-indigo-500' : 'text-slate-400'}`}>
+                                                    {slot.available ? 'Disponible' : 'Ocupado'}
+                                                </span>
+                                                {!slot.available && appointment && (
+                                                    <div className="mt-2 text-[8px] font-black uppercase tracking-tighter truncate w-full text-center opacity-70">
+                                                        {appointment.client_id?.name || appointment.guest_name}
+                                                    </div>
+                                                )}
+                                            </CardContent>
+                                        </Card>
+                                    )
+                                })
+                            )}
+                        </div>
                     ) : dailyAppointments.length === 0 ? (
+                        /* VISTA POR DEFECTO CUANDO NO HAY TURNOS */
                         <div className="flex flex-col items-center justify-center h-64 bg-slate-50/50 rounded-[2rem] border-2 border-dashed border-slate-200">
                             <Clock size={48} className="text-slate-200 mb-4" />
                             <p className="text-slate-400 font-bold text-sm italic">No hay turnos agendados para este día.</p>
                         </div>
                     ) : (
+                        /* VISTA DE LISTADO (CUANDO ESTÁ EN "TODOS") */
                         dailyAppointments.map((app) => (
                             <Card key={app._id} className="group border-slate-100 hover:border-indigo-200 hover:shadow-xl transition-all duration-300 rounded-3xl overflow-hidden bg-white">
                                 <CardContent className="p-6">

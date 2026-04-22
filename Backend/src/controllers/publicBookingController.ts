@@ -104,5 +104,78 @@ export const publicBookingController = {
             console.error('Error creating public appointment:', error);
             res.status(500).json({ success: false, message: 'Error al procesar la reserva' });
         }
+    },
+
+    getAvailability: async (req: Request, res: Response) => {
+        try {
+            const { id } = req.params;
+            const { date } = req.query; 
+            const { startOfDay, endOfDay, format, addMinutes, parse } = require('date-fns');
+
+            if (!date) return res.status(400).json({ success: false, message: 'La fecha es requerida' });
+
+            const professional = await Professional.findById(id).populate('organization_id');
+            if (!professional) return res.status(404).json({ success: false, message: 'Profesional no encontrado' });
+
+            let working_hours = professional.working_hours;
+
+            if (!working_hours || working_hours.length === 0) {
+                const org: any = professional.organization_id;
+                if (org?.settings?.appointments?.working_hours) {
+                    working_hours = org.settings.appointments.working_hours;
+                }
+            }
+
+            if (!working_hours || working_hours.length === 0) {
+                return res.json({ success: true, data: [], message: 'No hay horarios configurados' });
+            }
+
+            const selectedDate = new Date(date as string + 'T00:00:00');
+            const days = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+            const dayIndex = selectedDate.getDay();
+            const dayName = days[dayIndex];
+
+            const normalize = (str: string) => str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : "";
+            const dayConfig: any = working_hours.find(h => normalize(h.day) === normalize(dayName));
+
+            if (!dayConfig || !dayConfig.enabled) {
+                return res.json({ success: true, data: [], message: 'El profesional no trabaja este día' });
+            }
+
+            const dayStart = startOfDay(selectedDate);
+            const dayEnd = endOfDay(selectedDate);
+            const appointments = await Appointment.find({
+                professional_id: id,
+                date: { $gte: dayStart, $lte: dayEnd },
+                status: { $ne: 'cancelled' }
+            });
+
+            const availableSlots: any[] = [];
+            const duration = professional.appointment_duration || 30;
+
+            const timeRanges = dayConfig.slots && dayConfig.slots.length > 0 
+                ? dayConfig.slots 
+                : (dayConfig.start && dayConfig.end ? [{ start: dayConfig.start, end: dayConfig.end }] : []);
+
+            timeRanges.forEach((range: any) => {
+                let current = parse(range.start, 'HH:mm', selectedDate);
+                const end = parse(range.end, 'HH:mm', selectedDate);
+
+                while (current < end) {
+                    const slotTimeString = format(current, 'HH:mm');
+                    const isOccupied = appointments.some(app => format(new Date(app.date), 'HH:mm') === slotTimeString);
+
+                    availableSlots.push({
+                        time: slotTimeString,
+                        available: !isOccupied
+                    });
+                    current = addMinutes(current, duration);
+                }
+            });
+
+            res.json({ success: true, data: availableSlots });
+        } catch (error: any) {
+            res.status(500).json({ success: false, message: error.message });
+        }
     }
 };
