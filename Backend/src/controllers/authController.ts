@@ -258,9 +258,12 @@ export const logoutUser = async (req: Request, res: Response) => {
         console.error("Logout Error:", error);
     }
 
-    // Always clear Client Cookie
+    // Always clear Client Cookie (same options as when it was created)
+    const isProd = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
     res.cookie('token', '', {
         httpOnly: true,
+        secure: isProd,
+        sameSite: isProd ? 'none' : 'lax',
         expires: new Date(0)
     });
     res.status(200).json({ message: 'Logged out successfully' });

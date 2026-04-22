@@ -8,8 +8,27 @@ const app = express();
 // Force Restart for Backup Service Update
 
 // Middleware
+const allowedOrigins = [
+    process.env.FRONTEND_URL,           // Dominio principal de Vercel (ej: https://lac-pos.vercel.app)
+    process.env.FRONTEND_URL_2,         // Dominio custom si lo tenés (ej: https://glossprueba.com)
+    'http://localhost:3000',            // Dev local Next.js
+    'http://localhost:3001',            // Dev local alternativo
+].filter(Boolean) as string[];
+
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: (origin, callback) => {
+        // Permitir requests sin origin (ej: Postman, curl, mobile apps)
+        if (!origin) return callback(null, true);
+
+        // Permitir cualquier subdominio de vercel.app (previews de deployment)
+        if (origin.endsWith('.vercel.app')) return callback(null, true);
+
+        // Permitir orígenes explícitamente en la lista
+        if (allowedOrigins.includes(origin)) return callback(null, true);
+
+        console.warn(`[CORS] Origen bloqueado: ${origin}`);
+        callback(new Error(`CORS: Origen no permitido: ${origin}`));
+    },
     credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
