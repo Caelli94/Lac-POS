@@ -1,4 +1,7 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+// IMPORTANTE: Usa API_URL desde api-config para pasar por el proxy de Next.js en Vercel.
+// Esto resuelve el 401 cross-origin: browser → /api (proxy Vercel) → Render (con cookies).
+import { API_URL, getHeaders } from '@/lib/api-config';
+import { apiFetch } from '@/lib/api-fetch';
 
 export const appointmentService = {
     getAll: async (orgId: string, from?: string, to?: string) => {
@@ -6,36 +9,38 @@ export const appointmentService = {
         if (from) query.append('from', from);
         if (to) query.append('to', to);
 
-        const res = await fetch(`${API_URL}/appointments/${orgId}${query.toString() ? `?${query.toString()}` : ''}`, {
-            credentials: 'include'
+        const headers = await getHeaders();
+        const res = await apiFetch(`${API_URL}/appointments/${orgId}${query.toString() ? `?${query.toString()}` : ''}`, {
+            headers
         });
         return await res.json();
     },
 
     create: async (data: any) => {
-        const res = await fetch(`${API_URL}/appointments`, {
+        const headers = await getHeaders();
+        const res = await apiFetch(`${API_URL}/appointments`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { ...headers, 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
-            credentials: 'include'
         });
         return await res.json();
     },
 
     update: async (id: string, data: any) => {
-        const res = await fetch(`${API_URL}/appointments/${id}`, {
+        const headers = await getHeaders();
+        const res = await apiFetch(`${API_URL}/appointments/${id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { ...headers, 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
-            credentials: 'include'
         });
         return await res.json();
     },
 
     delete: async (id: string) => {
-        const res = await fetch(`${API_URL}/appointments/${id}`, {
+        const headers = await getHeaders();
+        const res = await apiFetch(`${API_URL}/appointments/${id}`, {
             method: 'DELETE',
-            credentials: 'include'
+            headers
         });
         return await res.json();
     }

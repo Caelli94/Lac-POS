@@ -1,4 +1,5 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+import { API_URL } from '@/lib/api-config';
+import { apiFetch } from '@/lib/api-fetch';
 
 export const checkService = {
     getAll: async (orgId: string, params: { type?: string, status?: string, search?: string, page?: number, limit?: number }) => {
@@ -9,12 +10,12 @@ export const checkService = {
         if (params.page) query.append('page', params.page.toString());
         if (params.limit) query.append('limit', params.limit.toString());
 
-        const res = await fetch(`${API_URL}/checks/${orgId}?${query.toString()}`);
+        const res = await apiFetch(`${API_URL}/checks/${orgId}?${query.toString()}`);
         return await res.json();
     },
 
     create: async (data: any) => {
-        const res = await fetch(`${API_URL}/checks`, {
+        const res = await apiFetch(`${API_URL}/checks`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
@@ -23,7 +24,7 @@ export const checkService = {
     },
 
     update: async (id: string, data: any) => {
-        const res = await fetch(`${API_URL}/checks/${id}`, {
+        const res = await apiFetch(`${API_URL}/checks/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
@@ -32,7 +33,7 @@ export const checkService = {
     },
 
     delete: async (id: string) => {
-        const res = await fetch(`${API_URL}/checks/${id}`, {
+        const res = await apiFetch(`${API_URL}/checks/${id}`, {
             method: 'DELETE'
         });
         return await res.json();

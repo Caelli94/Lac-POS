@@ -1,9 +1,5 @@
-
-let API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-
-if (typeof window !== 'undefined') {
-    API_URL = API_URL.replace('127.0.0.1', 'localhost');
-}
+import { API_URL } from '@/lib/api-config';
+import { apiFetch } from '@/lib/api-fetch';
 
 export interface BackupFile {
     filename: string;
@@ -17,7 +13,7 @@ export const backupService = {
         const headers: any = { 'Content-Type': 'application/json' };
         if (organizationId) headers['x-organization-id'] = organizationId;
 
-        const res = await fetch(`${API_URL}/backups`, {
+        const res = await apiFetch(`${API_URL}/backups`, {
             method: 'GET',
             headers,
             credentials: 'include'
@@ -35,7 +31,7 @@ export const backupService = {
             headers['x-organization-id'] = organizationId;
         }
 
-        const res = await fetch(`${API_URL}/backups`, {
+        const res = await apiFetch(`${API_URL}/backups`, {
             method: 'POST',
             headers,
             credentials: 'include',
@@ -52,7 +48,7 @@ export const backupService = {
 
     // Download via Blob
     downloadFile: async (filename: string) => {
-        const res = await fetch(`${API_URL}/backups/download/${filename}`, {
+        const res = await apiFetch(`${API_URL}/backups/download/${filename}`, {
             method: 'GET',
             credentials: 'include'
         });
@@ -75,7 +71,7 @@ export const backupService = {
         const formData = new FormData();
         formData.append('backup', file);
 
-        const res = await fetch(`${API_URL}/backups/restore`, {
+        const res = await apiFetch(`${API_URL}/backups/restore`, {
             method: 'POST',
             body: formData,
             credentials: 'include'
@@ -90,7 +86,7 @@ export const backupService = {
 
     // Get Restore History
     getHistory: async () => {
-        const res = await fetch(`${API_URL}/backups/restore-history`, {
+        const res = await apiFetch(`${API_URL}/backups/restore-history`, {
             credentials: 'include'
         });
         if (!res.ok) throw new Error('Failed to fetch history');
@@ -99,7 +95,7 @@ export const backupService = {
 
     // Get History Details
     getHistoryDetails: async (id: string) => {
-        const res = await fetch(`${API_URL}/backups/restore-history/${id}`, {
+        const res = await apiFetch(`${API_URL}/backups/restore-history/${id}`, {
             credentials: 'include'
         });
         if (!res.ok) throw new Error('Failed to fetch details');
