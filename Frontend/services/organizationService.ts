@@ -43,8 +43,14 @@ export const organizationService = {
             };
 
             if (typeof window === 'undefined') {
-                const { cookies } = await import('next/headers');
-                headers['Cookie'] = (await cookies()).toString();
+                try {
+                    const { cookies } = await import('next/headers');
+                    const cookieStore = await cookies();
+                    headers['Cookie'] = cookieStore.toString();
+                } catch (e) {
+                    // Fail gracefully during build time
+                    console.warn("[BuildTime] Cookies not available");
+                }
             } else {
                 fetchOptions.credentials = 'include';
             }
@@ -70,8 +76,14 @@ export const organizationService = {
             };
 
             if (typeof window === 'undefined') {
-                const { cookies } = await import('next/headers');
-                headers['Cookie'] = (await cookies()).toString();
+                try {
+                    const { cookies } = await import('next/headers');
+                    const cookieStore = await cookies();
+                    headers['Cookie'] = cookieStore.toString();
+                } catch (e) {
+                    // Fail gracefully during build time
+                    console.warn("[BuildTime] Cookies not available");
+                }
             } else {
                 fetchOptions.credentials = 'include';
             }
@@ -96,8 +108,14 @@ export const organizationService = {
             };
 
             if (typeof window === 'undefined') {
-                const { cookies } = await import('next/headers');
-                headers['Cookie'] = (await cookies()).toString();
+                try {
+                    const { cookies } = await import('next/headers');
+                    const cookieStore = await cookies();
+                    headers['Cookie'] = cookieStore.toString();
+                } catch (e) {
+                    // Fail gracefully during build time
+                    console.warn("[BuildTime] Cookies not available");
+                }
             } else {
                 fetchOptions.credentials = 'include';
             }
@@ -120,8 +138,14 @@ export const organizationService = {
             };
 
             if (typeof window === 'undefined') {
-                const { cookies } = await import('next/headers');
-                headers['Cookie'] = (await cookies()).toString();
+                try {
+                    const { cookies } = await import('next/headers');
+                    const cookieStore = await cookies();
+                    headers['Cookie'] = cookieStore.toString();
+                } catch (e) {
+                    // Fail gracefully during build time
+                    console.warn("[BuildTime] Cookies not available");
+                }
             } else {
                 fetchOptions.credentials = 'include';
             }
@@ -144,8 +168,14 @@ export const organizationService = {
             };
 
             if (typeof window === 'undefined') {
-                const { cookies } = await import('next/headers');
-                headers['Cookie'] = (await cookies()).toString();
+                try {
+                    const { cookies } = await import('next/headers');
+                    const cookieStore = await cookies();
+                    headers['Cookie'] = cookieStore.toString();
+                } catch (e) {
+                    // Fail gracefully during build time
+                    console.warn("[BuildTime] Cookies not available");
+                }
             } else {
                 fetchOptions.credentials = 'include';
             }
@@ -170,8 +200,14 @@ export const organizationService = {
             };
 
             if (typeof window === 'undefined') {
-                const { cookies } = await import('next/headers');
-                headers['Cookie'] = (await cookies()).toString();
+                try {
+                    const { cookies } = await import('next/headers');
+                    const cookieStore = await cookies();
+                    headers['Cookie'] = cookieStore.toString();
+                } catch (e) {
+                    // Fail gracefully during build time
+                    console.warn("[BuildTime] Cookies not available");
+                }
             } else {
                 fetchOptions.credentials = 'include';
             }
@@ -199,8 +235,14 @@ export const organizationService = {
             };
 
             if (typeof window === 'undefined') {
-                const { cookies } = await import('next/headers');
-                headers['Cookie'] = (await cookies()).toString();
+                try {
+                    const { cookies } = await import('next/headers');
+                    const cookieStore = await cookies();
+                    headers['Cookie'] = cookieStore.toString();
+                } catch (e) {
+                    // Fail gracefully during build time
+                    console.warn("[BuildTime] Cookies not available");
+                }
             } else {
                 fetchOptions.credentials = 'include';
             }
