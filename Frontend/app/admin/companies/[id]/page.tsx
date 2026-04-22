@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 
 import { organizationService } from '@/services/organizationService'
 import { notFound } from 'next/navigation'

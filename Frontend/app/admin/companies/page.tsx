@@ -1,4 +1,5 @@
-﻿
+
+export const dynamic = 'force-dynamic';
 import { organizationService } from '@/services/organizationService'
 import Link from 'next/link'
 import { Plus, Users } from "lucide-react"
