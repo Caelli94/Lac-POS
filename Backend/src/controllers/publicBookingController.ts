@@ -47,7 +47,7 @@ export const publicBookingController = {
             const professionals = await Professional.find({ 
                 organization_id: orgId,
                 is_active: true 
-            }).select('name specialty color working_hours');
+            }).select('name specialty color working_hours appointment_duration');
 
             res.json({ success: true, data: professionals });
         } catch (error) {
