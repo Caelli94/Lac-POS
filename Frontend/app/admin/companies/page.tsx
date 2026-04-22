@@ -1,5 +1,4 @@
-
-export const dynamic = 'force-dynamic';
+import { unstable_noStore as noStore } from 'next/cache';
 import { organizationService } from '@/services/organizationService'
 import Link from 'next/link'
 import { Plus, Users } from "lucide-react"
@@ -17,6 +16,7 @@ interface Organization {
 }
 
 export default async function CompaniesPage() {
+    noStore();
     // 2. Obtener las empresas (REAL)
     const rawOrgs = await organizationService.getAll();
     const organizations: Organization[] = rawOrgs.map((org: any) => ({

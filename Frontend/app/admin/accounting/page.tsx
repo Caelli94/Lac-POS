@@ -1,10 +1,11 @@
-export const dynamic = 'force-dynamic';
+import { unstable_noStore as noStore } from 'next/cache';
 import { organizationService } from '@/services/organizationService'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Wallet } from "lucide-react"
 import { AccountingTable } from './accounting-table'
 
 export default async function AccountingPage() {
+    noStore();
     const rawOrgs = await organizationService.getAll()
 
     // Mapear y asegurar estructura

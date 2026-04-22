@@ -1,11 +1,11 @@
-export const dynamic = 'force-dynamic';
-
+import { unstable_noStore as noStore } from 'next/cache';
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, LayoutDashboard, ShoppingCart, ChartBar } from 'lucide-react'
 import { organizationService } from '@/services/organizationService'
 
 export default async function AdminDashboard() {
+    noStore();
     // 2. Obtener Real Stats
     const data = await organizationService.getSuperAdminStats();
 

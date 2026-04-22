@@ -1,5 +1,4 @@
-export const dynamic = 'force-dynamic';
-
+import { unstable_noStore as noStore } from 'next/cache';
 import { organizationService } from '@/services/organizationService'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -31,6 +30,7 @@ interface OrgFeature {
 }
 
 export default async function CompanyDetailsPage({ params, searchParams }: Props) {
+    noStore();
     const { id: orgId } = await params
     const { tab } = await searchParams
     const initialTab = tab || 'modules'
