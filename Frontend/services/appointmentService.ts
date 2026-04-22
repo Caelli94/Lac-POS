@@ -6,7 +6,9 @@ export const appointmentService = {
         if (from) query.append('from', from);
         if (to) query.append('to', to);
 
-        const res = await fetch(`${API_URL}/appointments/${orgId}?${query.toString()}`);
+        const res = await fetch(`${API_URL}/appointments/${orgId}?${query.toString()}`, {
+            credentials: 'include'
+        });
         return await res.json();
     },
 
@@ -14,7 +16,8 @@ export const appointmentService = {
         const res = await fetch(`${API_URL}/appointments`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+            body: JSON.stringify(data),
+            credentials: 'include'
         });
         return await res.json();
     },
@@ -23,14 +26,16 @@ export const appointmentService = {
         const res = await fetch(`${API_URL}/appointments/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+            body: JSON.stringify(data),
+            credentials: 'include'
         });
         return await res.json();
     },
 
     delete: async (id: string) => {
         const res = await fetch(`${API_URL}/appointments/${id}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            credentials: 'include'
         });
         return await res.json();
     }

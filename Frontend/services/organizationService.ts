@@ -1,4 +1,4 @@
-﻿// Eliminamos createClient de Supabase
+// Eliminamos createClient de Supabase
 // import { createClient } from '@supabase/supabase-js';
 
 // Usaremos fetch directo al backend
@@ -17,7 +17,8 @@ export const organizationService = {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                cache: 'no-store' // Para evitar caché en Next.js si es necesario
+                cache: 'no-store',
+                credentials: 'include'
             });
 
             if (!response.ok) {
