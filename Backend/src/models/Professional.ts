@@ -16,6 +16,7 @@ export interface IProfessional extends Document {
         }[];
     }[];
     is_active: boolean;
+    appointment_duration: number;
 }
 
 const ProfessionalSchema: Schema = new Schema({
@@ -33,7 +34,8 @@ const ProfessionalSchema: Schema = new Schema({
             end: { type: String, default: '18:00' }
         }]
     }],
-    is_active: { type: Boolean, default: true }
+    is_active: { type: Boolean, default: true },
+    appointment_duration: { type: Number, default: 30 }
 }, {
     timestamps: true
 });

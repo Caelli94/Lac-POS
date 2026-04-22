@@ -50,7 +50,7 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
         
         setLoading(true);
         const startDateTime = new Date(`${selectedDate}T${selectedTime}:00`);
-        const duration = org.settings?.appointments?.default_duration || 30;
+        const duration = selectedProfessional?.appointment_duration || org.settings?.appointments?.default_duration || 30;
         const endDateTime = new Date(startDateTime.getTime() + duration * 60000);
 
         const res = await publicBookingService.book({
@@ -86,7 +86,7 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
         if (!dayConfig || !dayConfig.enabled) return [];
 
         const slots: string[] = [];
-        const duration = org.settings?.appointments?.default_duration || 30;
+        const duration = selectedProfessional?.appointment_duration || org.settings?.appointments?.default_duration || 30;
 
         const ranges = dayConfig.slots && dayConfig.slots.length > 0 
             ? dayConfig.slots 
@@ -104,7 +104,7 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
                 nextM = nextM % 60;
                 if (nextH >= 24) break;
                 current = `${String(nextH).padStart(2, '0')}:${String(nextM).padStart(2, '0')}`;
-                if (current >= end) break;
+                if (current > end) break;
             }
         });
 

@@ -56,7 +56,8 @@ export function ConfigTab({ org }: ConfigTabProps) {
         name: '',
         specialty: '',
         phone: '',
-        color: '#6366f1'
+        color: '#6366f1',
+        appointment_duration: 30
     })
     const [editingProf, setEditingProf] = useState<any>(null)
     const [isEditProfOpen, setIsEditProfOpen] = useState(false)
@@ -92,7 +93,7 @@ export function ConfigTab({ org }: ConfigTabProps) {
             if (res.success) {
                 toast.success("Profesional añadido")
                 setIsAddProfessionalOpen(false)
-                setNewProf({ name: '', specialty: '', phone: '', color: '#6366f1' })
+                setNewProf({ name: '', specialty: '', phone: '', color: '#6366f1', appointment_duration: 30 })
                 fetchProfessionals()
             }
         } catch (error) {
@@ -127,7 +128,8 @@ export function ConfigTab({ org }: ConfigTabProps) {
                 name: editingProf.name,
                 specialty: editingProf.specialty,
                 color: editingProf.color,
-                working_hours: editingProf.working_hours
+                working_hours: editingProf.working_hours,
+                appointment_duration: editingProf.appointment_duration
             })
             if (res.success) {
                 toast.success("Profesional actualizado")
@@ -257,16 +259,6 @@ export function ConfigTab({ org }: ConfigTabProps) {
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex items-center justify-end">
-                <Button 
-                    onClick={handleSave} 
-                    disabled={loading}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase text-[10px] px-8 h-12 tracking-widest rounded-2xl shadow-lg shadow-indigo-100 transition-all hover:scale-105 active:scale-95"
-                >
-                    {loading ? 'Guardando...' : <><Save className="mr-2 h-4 w-4" /> Guardar Cambios</>}
-                </Button>
-            </div>
-
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* HORARIOS DE ATENCIÓN */}
                 <div className="lg:col-span-2 space-y-6">
@@ -353,6 +345,7 @@ export function ConfigTab({ org }: ConfigTabProps) {
                                         specialty: '',
                                         phone: '',
                                         color: '#6366f1',
+                                        appointment_duration: 30,
                                         working_hours: JSON.parse(JSON.stringify(settings.working_hours))
                                     } as any);
                                 }
@@ -411,6 +404,17 @@ export function ConfigTab({ org }: ConfigTabProps) {
                                                         </div>
                                                     </div>
                                                 </div>
+                                                <div className="space-y-2">
+                                                    <Label className="text-[10px] font-black uppercase text-slate-400">Duración del Turno (Minutos)</Label>
+                                                    <Input 
+                                                        type="number"
+                                                        value={newProf.appointment_duration}
+                                                        onChange={(e) => setNewProf({...newProf, appointment_duration: parseInt(e.target.value) || 30})}
+                                                        placeholder="30"
+                                                        className="h-12 rounded-xl bg-slate-50 border-slate-200 font-bold"
+                                                    />
+                                                    <p className="text-[10px] font-medium text-slate-400 uppercase italic">Se usará para calcular los horarios disponibles en la web.</p>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -435,11 +439,12 @@ export function ConfigTab({ org }: ConfigTabProps) {
                                                         </div>
                                                         <div className={`space-y-2 ${day.enabled ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
                                                             {day.slots?.map((slot: any, sIdx: number) => (
-                                                                <div key={sIdx} className="flex items-center gap-1">
-                                                                    <Input type="time" className="h-7 w-20 text-[10px] font-bold" value={slot.start} onChange={(e) => updateSlot(idx, sIdx, 'start', e.target.value, 'newProf')} />
-                                                                    <Input type="time" className="h-7 w-20 text-[10px] font-bold" value={slot.end} onChange={(e) => updateSlot(idx, sIdx, 'end', e.target.value, 'newProf')} />
+                                                                <div key={sIdx} className="flex items-center gap-2">
+                                                                    <Input type="time" className="h-10 flex-1 text-xs font-bold rounded-xl" value={slot.start} onChange={(e) => updateSlot(idx, sIdx, 'start', e.target.value, 'newProf')} />
+                                                                    <span className="text-[10px] font-bold text-slate-400">A</span>
+                                                                    <Input type="time" className="h-10 flex-1 text-xs font-bold rounded-xl" value={slot.end} onChange={(e) => updateSlot(idx, sIdx, 'end', e.target.value, 'newProf')} />
                                                                     {day.slots.length > 1 && (
-                                                                        <Button variant="ghost" size="icon" onClick={() => removeSlot(idx, sIdx, 'newProf')} className="h-6 w-6 text-rose-500"><X size={12} /></Button>
+                                                                        <Button variant="ghost" size="icon" onClick={() => removeSlot(idx, sIdx, 'newProf')} className="h-8 w-8 text-rose-500"><X size={14} /></Button>
                                                                     )}
                                                                 </div>
                                                             ))}
@@ -449,12 +454,11 @@ export function ConfigTab({ org }: ConfigTabProps) {
                                             </div>
                                         </div>
                                     </div>
-
                                     <div className="p-8 border-t border-slate-100 bg-slate-50/50">
                                         <Button 
                                             onClick={handleAddProfessional} 
                                             disabled={loading}
-                                            className="w-full bg-indigo-600 text-white rounded-2xl h-14 font-black uppercase tracking-widest shadow-xl shadow-indigo-100"
+                                            className="w-full bg-black hover:bg-slate-800 text-white rounded-2xl h-14 font-black uppercase tracking-widest shadow-xl shadow-slate-200 transition-all hover:scale-[1.01] active:scale-95"
                                         >
                                             {loading ? 'Creando...' : 'Confirmar y Crear Profesional'}
                                         </Button>
@@ -485,7 +489,6 @@ export function ConfigTab({ org }: ConfigTabProps) {
                                                     size="icon" 
                                                     className="h-8 w-8 text-slate-400 hover:text-blue-600" 
                                                     onClick={() => {
-                                                        // Ensure working_hours exists
                                                         const prof = { ...p };
                                                         if (!prof.working_hours || prof.working_hours.length === 0) {
                                                             prof.working_hours = settings.working_hours;
@@ -555,32 +558,13 @@ export function ConfigTab({ org }: ConfigTabProps) {
                 </div>
 
                 <div className="space-y-8">
-                    {/* DURACIÓN POR DEFECTO */}
-                    <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden">
-                        <CardContent className="p-8 space-y-6">
-                            <div className="flex items-center gap-3 mb-2">
-                                <div className="p-3 bg-indigo-50 rounded-2xl text-indigo-600">
-                                    <Calendar size={20} />
-                                </div>
-                                <h4 className="font-black uppercase tracking-tight text-sm">Duración por Defecto</h4>
-                            </div>
-                            <div className="space-y-6">
-                                <div className="flex justify-between items-end">
-                                    <span className="text-4xl font-black text-indigo-600">{settings.default_duration}</span>
-                                    <span className="text-xs font-black uppercase text-slate-400 pb-1">Minutos</span>
-                                </div>
-                                <Slider 
-                                    defaultValue={[settings.default_duration]} 
-                                    max={120} 
-                                    step={5} 
-                                    onValueChange={(val) => setSettings({...settings, default_duration: val[0]})}
-                                />
-                                <p className="text-[10px] font-medium text-slate-500 italic text-center">
-                                    Se usará para calcular el fin de la cita automáticamente.
-                                </p>
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <Button 
+                        onClick={handleSave} 
+                        disabled={loading}
+                        className="w-full bg-black hover:bg-slate-800 text-white font-black uppercase text-[10px] h-14 tracking-widest rounded-[1.5rem] shadow-xl shadow-slate-200 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3"
+                    >
+                        {loading ? 'Guardando...' : <><Save className="h-5 w-5" /> Guardar Cambios</>}
+                    </Button>
 
                     {/* RESERVA PÚBLICA */}
                     <Card className="border-none shadow-sm rounded-[2.5rem] bg-indigo-900 text-white overflow-hidden relative group">
@@ -713,6 +697,15 @@ export function ConfigTab({ org }: ConfigTabProps) {
                                     />
                                 </div>
                                 <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase">Duración Turno (Minutos)</Label>
+                                    <Input 
+                                        type="number"
+                                        value={editingProf?.appointment_duration}
+                                        onChange={(e) => setEditingProf({...editingProf, appointment_duration: parseInt(e.target.value) || 30})}
+                                        className="rounded-xl bg-slate-50 border-slate-200"
+                                    />
+                                </div>
+                                <div className="space-y-2">
                                     <Label className="text-[10px] font-black uppercase">Color en Agenda</Label>
                                     <div className="flex items-center gap-3">
                                         <Input 
@@ -758,21 +751,22 @@ export function ConfigTab({ org }: ConfigTabProps) {
                                         </div>
                                         <div className={`space-y-2 transition-opacity ${day.enabled ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
                                             {day.slots?.map((slot: any, sIdx: number) => (
-                                                <div key={sIdx} className="flex items-center gap-1">
+                                                <div key={sIdx} className="flex items-center gap-2">
                                                     <Input 
                                                         type="time" 
-                                                        className="h-8 w-24 bg-white rounded-lg font-bold text-[10px] px-2" 
+                                                        className="h-12 flex-1 bg-white rounded-xl font-bold text-xs" 
                                                         value={slot.start}
                                                         onChange={(e) => updateSlot(idx, sIdx, 'start', e.target.value, 'editingProf')}
                                                     />
+                                                    <span className="text-[10px] font-bold text-slate-400">A</span>
                                                     <Input 
                                                         type="time" 
-                                                        className="h-8 w-24 bg-white rounded-lg font-bold text-[10px] px-2" 
+                                                        className="h-12 flex-1 bg-white rounded-xl font-bold text-xs" 
                                                         value={slot.end}
                                                         onChange={(e) => updateSlot(idx, sIdx, 'end', e.target.value, 'editingProf')}
                                                     />
                                                     {day.slots.length > 1 && (
-                                                        <Button variant="ghost" size="icon" onClick={() => removeSlot(idx, sIdx, 'editingProf')} className="h-6 w-6 text-rose-500"><X size={12} /></Button>
+                                                        <Button variant="ghost" size="icon" onClick={() => removeSlot(idx, sIdx, 'editingProf')} className="h-8 w-8 text-rose-500"><X size={14} /></Button>
                                                     )}
                                                 </div>
                                             ))}
@@ -793,7 +787,7 @@ export function ConfigTab({ org }: ConfigTabProps) {
                         <Button 
                             onClick={handleUpdateProfessional}
                             disabled={loading}
-                            className="flex-[2] h-12 bg-indigo-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-indigo-100"
+                            className="flex-[2] h-12 bg-black hover:bg-slate-800 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-slate-200 transition-all hover:scale-[1.01] active:scale-95"
                         >
                             {loading ? 'Guardando...' : 'Guardar Cambios del Profesional'}
                         </Button>
