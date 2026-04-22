@@ -128,6 +128,7 @@ export interface IOrganization extends Document {
             self_booking_enabled?: boolean;
             max_booking_days?: number;
             whatsapp_number?: string;
+            whatsapp_off_message?: string;
         };
     };
     barcodeSettings?: {
@@ -248,7 +249,8 @@ const OrganizationSchema: Schema = new Schema({
             whatsapp_template: { type: String, default: 'Hola {{client}}! Te recordamos tu turno el {{date}} a las {{time}} hs por {{service}}. Te esperamos!' },
             self_booking_enabled: { type: Boolean, default: false },
             max_booking_days: { type: Number, default: 30 },
-            whatsapp_number: { type: String, default: '' }
+            whatsapp_number: { type: String, default: '' },
+            whatsapp_off_message: { type: String, default: 'Hola! Vi que las reservas online están pausadas, quería consultar por un turno.' }
         }
     },
     barcodeSettings: {

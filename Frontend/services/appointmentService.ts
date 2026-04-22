@@ -6,7 +6,7 @@ export const appointmentService = {
         if (from) query.append('from', from);
         if (to) query.append('to', to);
 
-        const res = await fetch(`${API_URL}/appointments/${orgId}?${query.toString()}`, {
+        const res = await fetch(`${API_URL}/appointments/${orgId}${query.toString() ? `?${query.toString()}` : ''}`, {
             credentials: 'include'
         });
         return await res.json();

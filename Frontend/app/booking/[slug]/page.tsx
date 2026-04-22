@@ -211,7 +211,7 @@ export default function PublicBookingPage({ params }: { params: Promise<{ slug: 
                                 </a>
                             )}
                             <a 
-                                href={`https://wa.me/549${(org.settings?.appointments?.whatsapp_number || org.phone)?.replace(/[^0-9]/g, '')}`} 
+                                href={`https://wa.me/549${(org.settings?.appointments?.whatsapp_number || org.phone)?.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(org.settings?.appointments?.whatsapp_off_message || 'Hola! Vi que las reservas online están pausadas, quería consultar por un turno.')}`} 
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex flex-col items-center gap-2 hover:scale-110 transition-transform"

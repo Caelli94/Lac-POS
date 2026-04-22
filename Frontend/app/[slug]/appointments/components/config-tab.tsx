@@ -46,7 +46,9 @@ export function ConfigTab({ org }: ConfigTabProps) {
         default_duration: org?.settings?.appointments?.default_duration || 30,
         whatsapp_template: org?.settings?.appointments?.whatsapp_template || 'Hola {{client}}! Te recordamos tu turno el {{date}} a las {{time}} hs por {{service}}. Te esperamos!',
         self_booking_enabled: org?.settings?.appointments?.self_booking_enabled || false,
-        max_booking_days: org?.settings?.appointments?.max_booking_days || 30
+        max_booking_days: org?.settings?.appointments?.max_booking_days || 30,
+        whatsapp_number: org?.settings?.appointments?.whatsapp_number || '',
+        whatsapp_off_message: org?.settings?.appointments?.whatsapp_off_message || 'Hola! Vi que las reservas online están pausadas, quería consultar por un turno.'
     })
     const [professionals, setProfessionals] = useState<any[]>([])
     const [isAddProfessionalOpen, setIsAddProfessionalOpen] = useState(false)
@@ -193,7 +195,8 @@ export function ConfigTab({ org }: ConfigTabProps) {
                 whatsapp_template: org.settings.appointments.whatsapp_template || 'Hola {{client}}! Te recordamos tu turno el {{date}} a las {{time}} hs por {{service}}. Te esperamos!',
                 self_booking_enabled: org.settings.appointments.self_booking_enabled || false,
                 max_booking_days: org.settings.appointments.max_booking_days || 30,
-                whatsapp_number: org.settings.appointments.whatsapp_number || ''
+                whatsapp_number: org.settings.appointments.whatsapp_number || '',
+                whatsapp_off_message: org.settings.appointments.whatsapp_off_message || 'Hola! Vi que las reservas online están pausadas, quería consultar por un turno.'
             })
         }
     }, [org])
@@ -611,6 +614,16 @@ export function ConfigTab({ org }: ConfigTabProps) {
                                             className="h-12 rounded-xl bg-white border-slate-200 font-bold text-slate-900"
                                         />
                                         <p className="text-[10px] font-medium text-indigo-200 uppercase">Sin el 0 y sin el 15. Usaremos 549 por defecto.</p>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-black uppercase text-slate-400">Mensaje Automático (Cuando la web esté apagada)</Label>
+                                        <Textarea 
+                                            value={settings.whatsapp_off_message || ''}
+                                            onChange={(e) => setSettings({...settings, whatsapp_off_message: e.target.value})}
+                                            placeholder="Escribe el mensaje que recibirá tu WhatsApp..."
+                                            className="rounded-xl bg-white border-slate-200 text-xs min-h-[80px] text-slate-900 font-medium"
+                                        />
                                     </div>
 
                                     <div className="space-y-2">

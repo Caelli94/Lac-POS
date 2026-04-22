@@ -9,16 +9,13 @@ interface AuthRequest extends Request {
 export const protect = async (req: AuthRequest, res: Response, next: NextFunction) => {
     let token;
 
-    // 1. Check Authorization Header (Bearer)
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-        token = req.headers.authorization.split(' ')[1];
+    // 1. Check Cookie (HttpOnly) - Most reliable for web
+    if (req.cookies && req.cookies.token) {
+        token = req.cookies.token;
     }
-    // 2. Check Cookie (HttpOnly)
-    else if (req.headers.cookie) {
-        const tokenCookie = req.headers.cookie.split(';').find(c => c.trim().startsWith('token='));
-        if (tokenCookie) {
-            token = tokenCookie.split('=')[1];
-        }
+    // 2. Check Authorization Header (Bearer) - For mobile or other clients
+    else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+        token = req.headers.authorization.split(' ')[1];
     }
 
     if (token) {
