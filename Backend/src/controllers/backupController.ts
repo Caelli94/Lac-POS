@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { createBackup as createBackupService, listBackups, getBackupPath, restoreBackup, listRestoreLogs, getRestoreLog } from '../services/backupService';
+import { createBackup as createBackupService, listBackups, getBackupPath, restoreBackup, listRestoreLogs, getRestoreLog, analyzeBackup as analyzeBackupService } from '../services/backupService';
 import path from 'path';
 import fs from 'fs';
 
@@ -102,10 +102,65 @@ export const generateBackup = async (req: Request, res: Response) => {
             return res.status(403).json({ message: 'Organization context missing' });
         }
 
-        // const orgId = organizationId || req.headers['x-organization-id'] || req.query.organizationId; // OLD INSECURE WAY
+        const createdBy = user.name || user.email || 'Sistema';
+        let createdByRole = user.role || 'Sistema';
+        
+        // Try to get pretty role name from DB
+        try {
+            const { Role } = require('../models/Role');
+            const roleDoc = await Role.findOne({ 
+                $or: [{ _id: user.roleId }, { name: user.role }]
+            }).lean();
+            if (roleDoc) createdByRole = roleDoc.name;
+        } catch (e) {}
 
-        const result = await createBackupService(type, label, orgId);
+        const result = await createBackupService(type, label, orgId, createdBy, createdByRole);
         res.json(result);
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// @desc    Trigger daily backups for all organizations (For Vercel Crons)
+// @route   POST /api/backups/trigger-daily
+export const triggerDailyBackups = async (req: Request, res: Response) => {
+    // Basic shared secret check if provided in ENV
+    const cronSecret = process.env.CRON_SECRET;
+    const providedSecret = req.headers['authorization']?.replace('Bearer ', '');
+    
+    if (cronSecret && (providedSecret !== cronSecret)) {
+        return res.status(401).json({ message: 'Unauthorized Cron Trigger' });
+    }
+
+    try {
+        const { runDailyBackups } = require('../services/backupService');
+        const results = await runDailyBackups();
+        res.json({ message: 'Daily backups processed', results });
+    } catch (error) {
+        res.status(500).json({ message: 'Error triggering daily backups', error: String(error) });
+    }
+};
+
+// @desc    Analyze backup file before restore
+// @route   POST /api/backups/analyze
+export const analyzeBackup = async (req: Request, res: Response) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No file uploaded' });
+        }
+
+        const result = await analyzeBackupService(req.file.path);
+        
+        // Cleanup uploaded file
+        fs.unlink(req.file.path, (err) => {
+            if (err) console.error('Error deleting temp upload:', err);
+        });
+
+        if (result.success) {
+            res.json(result);
+        } else {
+            res.status(500).json({ message: 'Analysis failed', error: result.error });
+        }
     } catch (error) {
         res.status(500).json({ message: 'Server Error' });
     }
@@ -164,7 +219,19 @@ export const restore = async (req: Request, res: Response) => {
             if (targetOrg) orgId = targetOrg._id;
         }
 
-        const result: any = await restoreBackup(req.file.path, req.file.originalname, orgId);
+        const { collectionsToRestore } = req.body;
+        // collectionsToRestore might be a string (from FormData) or array
+        const collections = typeof collectionsToRestore === 'string' ? JSON.parse(collectionsToRestore) : collectionsToRestore;
+
+        // SECURITY & SAFETY: Create a safety backup of CURRENT state before restoring
+        console.log(`[RESTORE] Creating safety backup before restore for Org: ${orgId}`);
+        try {
+            await createBackupService('manual', 'PRE-RESTORE-SAFETY', orgId, user.name || user.email, 'Sistema');
+        } catch (backupErr) {
+            console.error('[RESTORE] Safety backup failed, but proceeding with restore...', backupErr);
+        }
+
+        const result: any = await restoreBackup(req.file.path, req.file.originalname, orgId, collections);
 
         // Cleanup uploaded file
         fs.unlink(req.file.path, (err) => {

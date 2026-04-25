@@ -20,6 +20,9 @@ import { PurchaseItem } from '../models/PurchaseItem'; // New
 import { SupplierAccount } from '../models/SupplierAccount'; // New
 import { SupplierAccountMovement } from '../models/SupplierAccountMovement'; // New
 import { CustomerAccount } from '../models/CustomerAccount'; // New
+import { Backup } from '../models/Backup';
+import { Check } from '../models/Check';
+import { Appointment } from '../models/Appointment';
 
 const gzip = promisify(zlib.gzip);
 const gunzip = promisify(zlib.gunzip);
@@ -35,7 +38,7 @@ if (!fs.existsSync(BACKUP_DIR)) {
     fs.mkdirSync(BACKUP_DIR, { recursive: true });
 }
 
-export const createBackup = async (type: 'auto' | 'manual' | 'daily' = 'manual', label?: string, organizationId?: string) => {
+export const createBackup = async (type: 'auto' | 'manual' | 'daily' = 'manual', label?: string, organizationId?: string, createdBy?: string, createdByRole?: string) => {
     try {
         const now = new Date();
         const day = String(now.getDate()).padStart(2, '0');
@@ -61,34 +64,47 @@ export const createBackup = async (type: 'auto' | 'manual' | 'daily' = 'manual',
         let supAccMovementsQuery: any = {};
 
         let targetOrgId = organizationId;
+        let organizationDoc: any = null;
 
         // Resolve Slug to ID if necessary
         if (organizationId) {
             const isObjectId = mongoose.Types.ObjectId.isValid(organizationId);
             if (!isObjectId) {
-                const org = await Organization.findOne({ slug: organizationId }).lean();
-                if (org) {
-                    targetOrgId = (org as any)._id.toString();
+                organizationDoc = await Organization.findOne({ slug: organizationId }).lean();
+                if (organizationDoc) {
+                    targetOrgId = (organizationDoc as any)._id.toString();
                 } else {
                     throw new Error(`Organization slug '${organizationId}' not found`);
                 }
+            } else {
+                organizationDoc = await Organization.findById(organizationId).lean();
             }
         }
 
-        if (targetOrgId) {
-            // Standard 'organization_id' field
-            queryOrg = { organization_id: targetOrgId };
-            // 'organization' field (CashSession, User, Role, Register)
-            queryOrgRef = { organization: targetOrgId };
-            // Organization Collection itself
-            orgQuery = { _id: targetOrgId };
+        // Check enabled features for the organization
+        const enabledFeatures = organizationDoc?.features 
+            ? organizationDoc.features.filter((f: any) => f.is_enabled).map((f: any) => f.code)
+            : [];
+        
+        // Modules are often tied to tabs too
+        const disabledTabs = organizationDoc?.settings?.disabled_tabs || [];
+        const isModuleEnabled = (code: string, tabName?: string) => {
+            if (tabName && disabledTabs.includes(tabName)) return false;
+            return enabledFeatures.includes(code) || !enabledFeatures.length; // If no features defined, assume all for backward compatibility
+        };
 
-            // CashMovements
-            const registers = await CashRegister.find({ organization: targetOrgId }).distinct('_id');
+        const backupChecks = isModuleEnabled('checks', 'cheques');
+        const backupAppointments = isModuleEnabled('appointments', 'turnero');
+
+        if (targetOrgId) {
+            const orgIdObj = new mongoose.Types.ObjectId(targetOrgId);
+            queryOrg = { organization_id: orgIdObj };
+            queryOrgRef = { organization: orgIdObj };
+            orgQuery = { _id: orgIdObj };
+            const registers = await CashRegister.find({ organization: orgIdObj }).distinct('_id');
             cashMovementQuery = { cashRegister: { $in: registers } };
         }
 
-        // 1. Fetch Header IDs for Indirect Lookups
         const [saleIds, purchaseIds, supAccountIds] = await Promise.all([
             Sale.find(queryOrg).distinct('_id'),
             Purchase.find(queryOrg).distinct('_id'),
@@ -101,11 +117,12 @@ export const createBackup = async (type: 'auto' | 'manual' | 'daily' = 'manual',
             supAccMovementsQuery = { account_id: { $in: supAccountIds } };
         }
 
-        // 2. Fetch All Data
+        // Fetch everything scoped by Org
         const [
             organizations,
+            users,
+            roles,
             products, customers, suppliers,
-            users, roles,
             cashRegisters, cashSessions, cashMovements,
             sales, saleItems,
             purchases, purchaseItems,
@@ -113,12 +130,12 @@ export const createBackup = async (type: 'auto' | 'manual' | 'daily' = 'manual',
             customerAccounts
         ] = await Promise.all([
             Organization.find(orgQuery).lean(),
+            User.find(queryOrgRef).lean(),
+            Role.find(queryOrgRef).lean(),
             Product.find({ ...queryOrg, deleted: { $ne: true } }).lean(),
             Customer.find({ ...queryOrg, deleted: { $ne: true } }).lean(),
             Supplier.find({ ...queryOrg, deleted: { $ne: true } }).lean(),
-            User.find({ ...queryOrgRef }).lean(),
-            Role.find({ ...queryOrgRef }).lean(),
-            CashRegister.find({ ...queryOrgRef }).lean(),
+            CashRegister.find(queryOrgRef).lean(),
             CashSession.find(queryOrgRef).lean(),
             CashMovement.find(cashMovementQuery).lean(),
             Sale.find(queryOrg).lean(),
@@ -130,13 +147,50 @@ export const createBackup = async (type: 'auto' | 'manual' | 'daily' = 'manual',
             CustomerAccount.find(queryOrg).lean()
         ]);
 
-        console.log(`[BackupService] Org Data Retrieved. OrgID: ${organizationId}`);
+        console.log(`[BackupService] Base Data Retrieved. OrgID: ${organizationId}`);
+
+        // 10. New Modules: Checks & Appointments
+        let checks: any[] = [];
+        let appointments: any[] = [];
+
+        if (backupChecks) {
+            console.log(`[BackupService] Backing up Checks...`);
+            checks = await Check.find(queryOrgRef).lean();
+        }
+        if (backupAppointments) {
+            console.log(`[BackupService] Backing up Appointments...`);
+            appointments = await Appointment.find(queryOrg).lean();
+        }
+
+        const data = {
+            organizations, users, roles,
+            products, customers, suppliers,
+            cashRegisters, cashSessions, cashMovements,
+            sales, saleItems,
+            purchases, purchaseItems,
+            supplierAccounts, supplierAccountMovements,
+            customerAccounts,
+            checks,
+            appointments
+        };
+
+        const itemCounts: any = {
+            products: products.length,
+            customers: customers.length,
+            suppliers: suppliers.length,
+            sales: sales.length,
+            purchases: purchases.length,
+            cashMovements: cashMovements.length,
+            users: users.length
+        };
+
+        if (backupChecks) itemCounts.checks = checks.length;
+        if (backupAppointments) itemCounts.appointments = appointments.length;
 
         // Construct Filename Dynamic
         let orgNamePart = '';
-        if (organizationId && organizations.length > 0) {
-            const org = organizations[0] as any;
-            const rawName = org.slug || org.name || org.businessName || 'Unknown';
+        if (organizationDoc) {
+            const rawName = organizationDoc.slug || organizationDoc.name || 'Unknown';
             const cleanName = rawName.replace(/[<>:"/\\|?*]/g, '');
             orgNamePart = ` ${cleanName}`;
         }
@@ -144,38 +198,45 @@ export const createBackup = async (type: 'auto' | 'manual' | 'daily' = 'manual',
         const filename = `Respaldo ${friendlyType}${orgNamePart} ${timeStr}.json.gz`;
         const filepath = path.join(BACKUP_DIR, filename);
 
-        const backupData = {
+        const backupPayload = {
             metadata: {
                 timestamp: new Date(),
-                version: '2.0', // Version bump
-                label
+                version: '2.1',
+                label,
+                itemCounts,
+                operator: createdBy,
+                role: createdByRole
             },
-            data: {
-                organizations,
-                users, roles,
-                products, customers, suppliers,
-                cashRegisters, cashSessions, cashMovements,
-                sales, saleItems,
-                purchases, purchaseItems,
-                supplierAccounts, supplierAccountMovements,
-                customerAccounts
-            }
+            data
         };
 
-        // Compress & Write
-        const jsonContent = JSON.stringify(backupData);
+        const jsonContent = JSON.stringify(backupPayload);
         const compressed = await gzip(jsonContent);
         await writeFile(filepath, compressed);
 
+        // Save Metadata to DB
+        if (targetOrgId) {
+            await Backup.create({
+                filename,
+                label,
+                type,
+                organization: targetOrgId,
+                size: compressed.length,
+                status: 'success',
+                itemCounts,
+                createdBy,
+                createdByRole
+            });
+        }
+
         console.log(`[BackupService] Backup created: ${filename} (${(compressed.length / 1024 / 1024).toFixed(2)} MB)`);
 
-        // Retention Policy
         await cleanOldBackups(30);
 
         return { success: true, filename, size: compressed.length };
-    } catch (error) {
+    } catch (error: any) {
         console.error('[BackupService] Backup failed:', error);
-        return { success: false, error };
+        return { success: false, error: error.message };
     }
 };
 
@@ -208,31 +269,53 @@ const cleanOldBackups = async (keepCount: number) => {
 
 export const listBackups = async (organizationId?: string) => {
     try {
-        const files = await readdir(BACKUP_DIR);
-
-        let filesToReturn = files.filter(f => f.endsWith('.json.gz'));
-
-        // Security Filter: If Organization ID (Slug) is provided, only show backups containing that slug/name
+        let query: any = {};
         if (organizationId) {
-            const searchTerm = organizationId.toLowerCase().trim();
-            filesToReturn = filesToReturn.filter(f =>
-                f.toLowerCase().includes(searchTerm)
-            );
+            const org = await Organization.findOne({ slug: organizationId }).select('_id');
+            if (org) query.organization = org._id;
         }
 
-        const backupList = await Promise.all(
-            filesToReturn.map(async f => {
-                const stats = await stat(path.join(BACKUP_DIR, f));
-                return {
-                    filename: f,
-                    size: (stats.size / 1024 / 1024).toFixed(2) + ' MB',
-                    date: stats.mtime
-                };
-            })
-        );
-        return backupList.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        const backups = await Backup.find(query).sort({ createdAt: -1 }).lean();
+        
+        return backups.map(b => ({
+            _id: b._id,
+            filename: b.filename,
+            size: (b.size / 1024 / 1024).toFixed(2) + ' MB',
+            date: b.createdAt,
+            label: b.label,
+            type: b.type,
+            itemCounts: b.itemCounts,
+            createdBy: b.createdBy,
+            createdByRole: b.createdByRole
+        }));
     } catch (error) {
+        console.error('[BackupService] List backups failed:', error);
         return [];
+    }
+};
+
+export const analyzeBackup = async (filePath: string) => {
+    try {
+        const fileContent = await readFile(filePath);
+        const unzipped = await gunzip(fileContent);
+        const backupData = JSON.parse(unzipped.toString('utf-8'));
+
+        const { metadata, data } = backupData;
+        
+        const counts: any = {};
+        if (data) {
+            Object.keys(data).forEach(key => {
+                counts[key] = Array.isArray(data[key]) ? data[key].length : (data[key] ? 1 : 0);
+            });
+        }
+
+        return {
+            success: true,
+            metadata: metadata || {},
+            counts
+        };
+    } catch (error: any) {
+        return { success: false, error: error.message };
     }
 };
 
@@ -254,43 +337,82 @@ export const getBackupPath = (filename: string) => {
 };
 
 // NOTE: We need to update restoreBackup too
-export const restoreBackup = async (filePath: string, originalFilename?: string, organizationId?: string) => {
+export const restoreBackup = async (filePath: string, originalFilename?: string, organizationId?: string, collectionsToRestore?: string[]) => {
     try {
         console.log(`[BackupService] Restoring details from: ${filePath}...`);
         const filename = originalFilename || path.basename(filePath);
 
         const fileContent = await readFile(filePath);
+        
+        // SECURITY: Limit uncompressed size to prevent Zip Bombs (e.g., 100MB)
+        // We can estimate uncompressed size or just rely on a safe limit during gunzip
         const unzipped = await gunzip(fileContent);
+        if (unzipped.length > 100 * 1024 * 1024) {
+            throw new Error('El archivo descomprimido es demasiado grande (Límite: 100MB).');
+        }
+
         const jsonStr = unzipped.toString('utf-8');
+        
+        // SECURITY: Simple check for common prototype pollution patterns before parsing
+        if (jsonStr.includes('"__proto__"') || jsonStr.includes('"constructor"')) {
+            throw new Error('El archivo contiene patrones de datos no permitidos (Security Risk).');
+        }
+
         const backupData = JSON.parse(jsonStr);
 
         const { data } = backupData;
-        if (!data) throw new Error('Invalid Backup Format');
-
-        const {
-            organizations, users, roles,
-            products, customers, suppliers,
-            cashRegisters, cashSessions, cashMovements,
-            sales, saleItems,
-            purchases, purchaseItems,
-            supplierAccounts, supplierAccountMovements,
-            customerAccounts
-        } = data;
-
-        const logDetails: any = {
-            products: [], customers: [], suppliers: []
-        };
+        if (!data) throw new Error('Formato de respaldo inválido.');
 
         const smartProcess = async (Model: any, backupRecords: any[], type: string) => {
             if (!backupRecords || backupRecords.length === 0) return 0;
-            // Basic Restore Logic (Upsert)
-            const bulkOps = backupRecords.map(record => ({
-                updateOne: {
-                    filter: { _id: record._id },
-                    update: { $set: { ...record, deleted: false, deletedAt: null } },
-                    upsert: true
+            
+            // Check if this collection should be skipped
+            const collectionName = Model.collection.collectionName.toLowerCase();
+            const shouldRestore = !collectionsToRestore || 
+                                collectionsToRestore.length === 0 || 
+                                collectionsToRestore.some(c => c.toLowerCase() === type.toLowerCase() || c.toLowerCase() === collectionName);
+            
+            if (!shouldRestore) {
+                console.log(`[BackupService] Skipping restoration for: ${type}`);
+                return 0;
+            }
+
+            // SECURITY: Ensure we only update records belonging to THIS organization
+            // Determine the field name used for organization scoping in this model
+            const orgField = (Model.schema.paths.organization_id) ? 'organization_id' : 'organization';
+            const isOrgModel = Model.modelName === 'Organization';
+
+            const bulkOps = backupRecords.map(record => {
+                // Remove sensitive fields that shouldn't be overwritten blindly
+                const { _id, __v, ...cleanRecord } = record;
+                
+                // If it's the Organization record itself, we protect critical fields
+                if (isOrgModel) {
+                    delete (cleanRecord as any).subscription_status;
+                    delete (cleanRecord as any).slug;
+                    delete (cleanRecord as any).subscription_details;
                 }
-            }));
+
+                // Force organization ID to the current context to prevent cross-org data injection
+                if (organizationId && !isOrgModel) {
+                    cleanRecord[orgField] = new mongoose.Types.ObjectId(organizationId);
+                }
+
+                // Filter construction: must match the ID AND the organization
+                const filter: any = { _id: new mongoose.Types.ObjectId(_id) };
+                if (!isOrgModel && organizationId) {
+                    filter[orgField] = organizationId;
+                }
+
+                return {
+                    updateOne: {
+                        filter,
+                        update: { $set: { ...cleanRecord, deleted: false, deletedAt: null } },
+                        upsert: !isOrgModel // Only upsert if it's NOT the organization itself
+                    }
+                };
+            });
+
             await Model.bulkWrite(bulkOps);
             return bulkOps.length;
         };
@@ -298,70 +420,56 @@ export const restoreBackup = async (filePath: string, originalFilename?: string,
         const results: any = {};
         let totalChanges = 0;
 
-        // Restore Order matters? Not really for upsert by ID, but logical for deps.
-        if (organizations) totalChanges += await smartProcess(Organization, organizations, 'Organization');
-        if (roles) totalChanges += await smartProcess(Role, roles, 'Role');
-        if (users) totalChanges += await smartProcess(User, users, 'User');
+        // Sequence of restoration
+        if (data.organizations) totalChanges += await smartProcess(Organization, data.organizations, 'Organization');
+        if (data.roles) totalChanges += await smartProcess(Role, data.roles, 'Role');
+        if (data.users) totalChanges += await smartProcess(User, data.users, 'User');
+        if (data.products) totalChanges += await smartProcess(Product, data.products, 'Product');
+        if (data.customers) totalChanges += await smartProcess(Customer, data.customers, 'Customer');
+        if (data.suppliers) totalChanges += await smartProcess(Supplier, data.suppliers, 'Supplier');
+        if (data.cashRegisters) totalChanges += await smartProcess(CashRegister, data.cashRegisters, 'CashRegister');
+        if (data.cashSessions) totalChanges += await smartProcess(CashSession, data.cashSessions, 'CashSession');
+        if (data.cashMovements) totalChanges += await smartProcess(CashMovement, data.cashMovements, 'CashMovement');
+        if (data.sales) totalChanges += await smartProcess(Sale, data.sales, 'Sale');
+        if (data.saleItems) totalChanges += await smartProcess(SaleItem, data.saleItems, 'SaleItem');
+        if (data.purchases) totalChanges += await smartProcess(Purchase, data.purchases, 'Purchase');
+        if (data.purchaseItems) totalChanges += await smartProcess(PurchaseItem, data.purchaseItems, 'PurchaseItem');
+        if (data.supplierAccounts) totalChanges += await smartProcess(SupplierAccount, data.supplierAccounts, 'SupplierAccount');
+        if (data.supplierAccountMovements) totalChanges += await smartProcess(SupplierAccountMovement, data.supplierAccountMovements, 'SupplierAccountMovement');
+        if (data.customerAccounts) totalChanges += await smartProcess(CustomerAccount, data.customerAccounts, 'CustomerAccount');
+        if (data.checks) totalChanges += await smartProcess(Check, data.checks, 'Check');
+        if (data.appointments) totalChanges += await smartProcess(Appointment, data.appointments, 'Appointment');
 
-        if (products) totalChanges += await smartProcess(Product, products, 'Product');
-        if (customers) totalChanges += await smartProcess(Customer, customers, 'Customer');
-        if (suppliers) totalChanges += await smartProcess(Supplier, suppliers, 'Supplier');
-
-        if (cashRegisters) totalChanges += await smartProcess(CashRegister, cashRegisters, 'CashRegister');
-        if (cashSessions) totalChanges += await smartProcess(CashSession, cashSessions, 'CashSession');
-        if (cashMovements) totalChanges += await smartProcess(CashMovement, cashMovements, 'CashMovement');
-
-        if (sales) totalChanges += await smartProcess(Sale, sales, 'Sale');
-        if (saleItems) totalChanges += await smartProcess(SaleItem, saleItems, 'SaleItem');
-
-        if (purchases) totalChanges += await smartProcess(Purchase, purchases, 'Purchase');
-        if (purchaseItems) totalChanges += await smartProcess(PurchaseItem, purchaseItems, 'PurchaseItem');
-
-        if (supplierAccounts) totalChanges += await smartProcess(SupplierAccount, supplierAccounts, 'SupplierAccount');
-        if (supplierAccountMovements) totalChanges += await smartProcess(SupplierAccountMovement, supplierAccountMovements, 'SupplierAccountMovement');
-
-        if (customerAccounts) totalChanges += await smartProcess(CustomerAccount, customerAccounts, 'CustomerAccount');
-
-        // Populate results for log
-        results.products = products?.length || 0;
-        results.sales = sales?.length || 0;
-        results.others = totalChanges; // Simplified for now
-
+        results.totalChanges = totalChanges;
         const finalStatus = totalChanges > 0 ? 'RESTORED' : 'PROCESSED';
 
         // Log History
         try {
-            const logEntry = {
+            await RestoreLog.create({
                 timestamp: new Date(),
                 organization: organizationId,
                 backup_filename: filename,
                 status: finalStatus,
                 summary: {
-                    products: results.products,
-                    customers: customers?.length || 0,
-                    suppliers: suppliers?.length || 0,
-                    sales: results.sales,
-                    others: (cashMovements?.length || 0) + (purchaseItems?.length || 0) // rough metric
-                },
-                details: logDetails // Detailed tracking requires the complex smartProcess logic from before, cutting for brevity/reliability
-            };
-            await RestoreLog.create(logEntry);
+                    total: totalChanges,
+                    restoredCollections: collectionsToRestore || ['all']
+                }
+            });
         } catch (logError) {
             console.error('[BackupService] FAILED to create RestoreLog:', logError);
         }
 
-        console.log('[BackupService] Restore Completed.');
         return { success: true, results };
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('[BackupService] Restore failed:', error);
-        return { success: false, error };
+        return { success: false, error: error.message };
     }
 };
 
 // Scheduler (Run Daily at 03:00 AM)
 export const initBackupScheduler = () => {
-    cron.schedule('0 3 * * *', async () => {
+    cron.schedule('0 6 * * *', async () => {
         console.log('[BackupService] Starting Daily Automatic Backups...');
         try {
             const organizations = await Organization.find({}).select('_id slug name');
@@ -379,5 +487,22 @@ export const initBackupScheduler = () => {
             console.error('[BackupService] Error fetching organizations for automatic backup:', error);
         }
     });
-    console.log('[BackupService] Scheduler Initialized (Daily 03:00 AM)');
+    console.log('[BackupService] Scheduler Initialized (Daily 03:00 AM) - Note: In serverless (Vercel), use the /trigger-daily endpoint via Vercel Crons.');
+};
+
+export const runDailyBackups = async () => {
+    console.log('[BackupService] Starting Triggered Daily Automatic Backups...');
+    const organizations = await Organization.find({}).select('_id slug name');
+    const results = [];
+
+    for (const org of organizations) {
+        try {
+            const res = await createBackup('daily', 'Auto-Triggered', org._id.toString(), 'Sistema');
+            results.push({ org: org.slug, success: res.success });
+        } catch (err: any) {
+            console.error(`[BackupService] Failed to backup org: ${org.name}`, err);
+            results.push({ org: org.slug, success: false, error: err.message });
+        }
+    }
+    return results;
 };

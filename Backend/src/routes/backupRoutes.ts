@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getBackups, generateBackup, downloadBackup, restore, getRestoreHistory, getRestoreLogDetails } from '../controllers/backupController';
+import { getBackups, generateBackup, downloadBackup, restore, getRestoreHistory, getRestoreLogDetails, analyzeBackup, triggerDailyBackups } from '../controllers/backupController';
 import { protect } from '../middlewares/authMiddleware';
 import multer from 'multer';
 import fs from 'fs';
@@ -42,7 +42,13 @@ router.get('/download/:filename', downloadBackup);
 router.get('/restore-history', getRestoreHistory);
 router.get('/restore-history/:id', getRestoreLogDetails);
 
+// Analyze backup
+router.post('/analyze', upload.single('backup'), analyzeBackup);
+
 // Restore backup
 router.post('/restore', upload.single('backup'), restore);
+
+// Trigger daily backups (for external cron)
+router.get('/trigger-daily', triggerDailyBackups);
 
 export default router;

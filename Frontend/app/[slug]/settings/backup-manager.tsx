@@ -17,6 +17,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { RestoreHistory } from './restore-history'
 import { Loader2, Download, Archive, RefreshCw, ShieldCheck, Database, UploadCloud, History } from 'lucide-react'
 import { toast } from 'sonner'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
 
 import {
     AlertDialog,
@@ -44,6 +47,9 @@ export function BackupManager() {
     const [confirmOpen, setConfirmOpen] = useState(false)
     const [pendingFile, setPendingFile] = useState<File | null>(null)
     const [lastRestore, setLastRestore] = useState<number>(0)
+    const [analysis, setAnalysis] = useState<any>(null)
+    const [analyzing, setAnalyzing] = useState(false)
+    const [selectedCollections, setSelectedCollections] = useState<string[]>([])
 
     const fetchBackups = async () => {
         try {
@@ -64,7 +70,7 @@ export function BackupManager() {
         setCreating(true)
         console.log("Creating backup for Org:", slug);
         try {
-            const res = await backupService.create('manual-user', slug)
+            const res = await backupService.create('Manual', slug)
             if (res.success) {
                 toast.success('Respaldo creado exitosamente', {
                     icon: <CheckCircle2 className="text-green-500" />
@@ -93,11 +99,29 @@ export function BackupManager() {
         fileInputRef.current?.click()
     }
 
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0]
         if (!file) return
+        
         setPendingFile(file)
+        setAnalyzing(true)
         setConfirmOpen(true)
+        
+        try {
+            const data = await backupService.analyze(file)
+            if (data.success) {
+                setAnalysis(data)
+                // Select all by default
+                setSelectedCollections(Object.keys(data.counts))
+            } else {
+                toast.error('No se pudo analizar el archivo')
+            }
+        } catch (error) {
+            toast.error('Error al procesar el archivo')
+        } finally {
+            setAnalyzing(false)
+        }
+        
         event.target.value = '' // Reset input
     }
 
@@ -106,10 +130,10 @@ export function BackupManager() {
         setConfirmOpen(false)
         setRestoring(true)
         try {
-            const res = await backupService.restore(pendingFile)
+            const res = await backupService.restore(pendingFile, selectedCollections)
             if (res.success) {
                 toast.success('¡Restauración Exitosa!')
-                toast.info(`Se procesaron ${JSON.stringify(res.results)} registros`)
+                toast.info(`Se procesaron ${res.results.totalChanges} cambios`)
                 fetchBackups() // Refresh lists if needed
                 setLastRestore(Date.now()) // Refresh History Tab
             } else {
@@ -120,6 +144,7 @@ export function BackupManager() {
         } finally {
             setRestoring(false)
             setPendingFile(null)
+            setAnalysis(null)
         }
     }
 
@@ -214,6 +239,7 @@ export function BackupManager() {
                                         <TableRow>
                                             <TableHead>Fecha y Hora</TableHead>
                                             <TableHead>Nombre del Archivo</TableHead>
+                                            <TableHead>Operador</TableHead>
                                             <TableHead>Tamaño</TableHead>
                                             <TableHead className="text-right">Acciones</TableHead>
                                         </TableRow>
@@ -222,15 +248,54 @@ export function BackupManager() {
                                         {backups.map((backup) => (
                                             <TableRow key={backup.filename}>
                                                 <TableCell className="font-medium">
-                                                    {new Date(backup.date).toLocaleString('es-AR')}
-                                                </TableCell>
-                                                <TableCell className="text-slate-500 font-mono text-xs">
-                                                    {backup.filename}
+                                                    <div className="flex flex-col">
+                                                        <span className="text-slate-900 font-bold">{new Date(backup.date).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                                                        {backup.label && <span className="text-[10px] text-emerald-600 font-medium">#{backup.label}</span>}
+                                                    </div>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
+                                                    <div className="flex flex-col gap-1.5">
+                                                        <span className="text-slate-900 font-semibold text-xs">{backup.filename}</span>
+                                                        {backup.itemCounts && (
+                                                            <div className="flex gap-1.5 flex-wrap">
+                                                                {Object.entries(backup.itemCounts).map(([k, v]: any) => {
+                                                                    const labels: Record<string, string> = {
+                                                                        products: 'productos',
+                                                                        customers: 'clientes',
+                                                                        suppliers: 'proveedores',
+                                                                        sales: 'ventas',
+                                                                        purchases: 'compras',
+                                                                        cashMovements: 'mov. caja',
+                                                                        users: 'usuarios',
+                                                                        checks: 'cheques',
+                                                                        appointments: 'turnos'
+                                                                    }
+                                                                    return (
+                                                                        <span key={k} className="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md border border-slate-200 font-medium">
+                                                                            {labels[k] || k}: <span className="text-slate-900">{v}</span>
+                                                                        </span>
+                                                                    )
+                                                                })}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-xs text-slate-700 font-bold leading-tight">
+                                                            {backup.createdBy || 'Sistema'}
+                                                        </span>
+                                                        {backup.createdByRole && (
+                                                            <span className="text-[10px] text-slate-400 font-medium">
+                                                                {backup.createdByRole}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge variant="secondary" className="font-mono text-[10px] bg-slate-50 border-slate-200">
                                                         {backup.size}
-                                                    </span>
+                                                    </Badge>
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                     <Button
@@ -257,34 +322,100 @@ export function BackupManager() {
                 </TabsContent>
             </Tabs>
 
-            <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-                <AlertDialogContent>
+            <AlertDialog open={confirmOpen} onOpenChange={(val) => {
+                if (!val && !restoring) {
+                    setConfirmOpen(false)
+                    setAnalysis(null)
+                }
+            }}>
+                <AlertDialogContent className="max-w-2xl">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="flex items-center gap-2 text-amber-600">
                             <AlertTriangle className="h-5 w-5" />
                             Atención: Restauración de Sistema
                         </AlertDialogTitle>
                         <AlertDialogDescription asChild>
-                            <div className="space-y-3 pt-2 text-slate-600 text-sm">
+                            <div className="space-y-4 pt-2 text-slate-600 text-sm">
                                 <div className="p-3 bg-amber-50 rounded-md border border-amber-100 text-amber-900 text-sm">
-                                    <strong>Estás a punto de importar:</strong><br />
-                                    <span className="font-mono">{pendingFile?.name}</span>
+                                    <strong>Archivo seleccionado:</strong><br />
+                                    <span className="font-mono text-xs">{pendingFile?.name}</span>
                                 </div>
-                                <p>
-                                    Esta acción <strong>fusionará</strong> los datos del respaldo con los actuales.
-                                </p>
-                                <ul className="list-disc pl-5 text-xs space-y-1">
-                                    <li>Se recuperarán clientes y productos eliminados.</li>
-                                    <li>Se actualizarán los precios y datos existentes.</li>
-                                    <li>Los datos nuevos NO serán borrados.</li>
-                                </ul>
-                                <p className="font-medium">¿Estás seguro de continuar?</p>
+
+                                {analyzing ? (
+                                    <div className="flex items-center justify-center p-6 gap-3">
+                                        <Loader2 className="animate-spin text-amber-500" />
+                                        <span>Analizando contenido del respaldo...</span>
+                                    </div>
+                                ) : analysis ? (
+                                    <div className="space-y-4">
+                                        <div>
+                                            <h4 className="font-bold text-slate-900 mb-2">Contenido detectado:</h4>
+                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                                {Object.entries(analysis.counts).map(([key, count]: any) => (
+                                                    <div key={key} className="flex items-center space-x-2 border p-2 rounded-md bg-white">
+                                                        <Checkbox 
+                                                            id={`check-${key}`}
+                                                            checked={selectedCollections.includes(key)}
+                                                            onCheckedChange={(checked) => {
+                                                                if (checked) {
+                                                                    setSelectedCollections(prev => [...prev, key])
+                                                                } else {
+                                                                    setSelectedCollections(prev => prev.filter(c => c !== key))
+                                                                }
+                                                            }}
+                                                        />
+                                                        <Label htmlFor={`check-${key}`} className="text-xs cursor-pointer flex-1">
+                                                            <span className="capitalize">
+                                                                {(({
+                                                                    products: 'Productos',
+                                                                    customers: 'Clientes',
+                                                                    suppliers: 'Proveedores',
+                                                                    sales: 'Ventas',
+                                                                    purchases: 'Compras',
+                                                                    cashMovements: 'Mov. caja',
+                                                                    users: 'Usuarios',
+                                                                    organizations: 'Organización',
+                                                                    roles: 'Roles',
+                                                                    cashRegisters: 'Cajas registradoras',
+                                                                    cashSessions: 'Sesiones de caja',
+                                                                    saleItems: 'Detalles de venta',
+                                                                    purchaseItems: 'Detalles de compra',
+                                                                    supplierAccounts: 'Ctas. proveedores',
+                                                                    supplierAccountMovements: 'Mov. proveedores',
+                                                                    customerAccounts: 'Ctas. clientes',
+                                                                    checks: 'Cheques',
+                                                                    appointments: 'Turnos (Agenda)'
+                                                                } as Record<string, string>)[key] || key)}
+                                                            </span>
+                                                            <span className="ml-1 text-slate-400">({count})</span>
+                                                        </Label>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="p-3 bg-slate-50 rounded-md text-[11px] space-y-1">
+                                            <p className="font-bold text-slate-700">Reglas de Importación:</p>
+                                            <ul className="list-disc pl-4">
+                                                <li>Se recuperarán registros eliminados.</li>
+                                                <li>Se actualizarán los datos de registros existentes (mismo ID).</li>
+                                                <li><strong>Los datos creados después de este respaldo NO se borrarán.</strong></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                ) : null}
+
+                                <p className="font-medium text-center border-t pt-4">¿Estás seguro de continuar con la restauración?</p>
                             </div>
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={executeRestore} className="bg-amber-600 hover:bg-amber-700">
+                        <AlertDialogCancel onClick={() => setAnalysis(null)}>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction 
+                            onClick={executeRestore} 
+                            disabled={analyzing || selectedCollections.length === 0}
+                            className="bg-amber-600 hover:bg-amber-700"
+                        >
                             Confirmar Restauración
                         </AlertDialogAction>
                     </AlertDialogFooter>

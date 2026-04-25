@@ -5,6 +5,10 @@ export interface BackupFile {
     filename: string;
     size: string;
     date: string;
+    label?: string;
+    itemCounts?: Record<string, number>;
+    createdBy?: string;
+    createdByRole?: string;
 }
 
 export const backupService = {
@@ -66,10 +70,31 @@ export const backupService = {
         window.URL.revokeObjectURL(url);
     },
 
-    // Restore from file
-    restore: async (file: File) => {
+    // Analyze before restore
+    analyze: async (file: File) => {
         const formData = new FormData();
         formData.append('backup', file);
+
+        const res = await apiFetch(`${API_URL}/backups/analyze`, {
+            method: 'POST',
+            body: formData,
+            credentials: 'include'
+        });
+
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.message || 'Analysis failed');
+        }
+        return res.json();
+    },
+
+    // Restore from file
+    restore: async (file: File, collectionsToRestore?: string[]) => {
+        const formData = new FormData();
+        formData.append('backup', file);
+        if (collectionsToRestore) {
+            formData.append('collectionsToRestore', JSON.stringify(collectionsToRestore));
+        }
 
         const res = await apiFetch(`${API_URL}/backups/restore`, {
             method: 'POST',
