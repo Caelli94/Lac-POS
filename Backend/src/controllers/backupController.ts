@@ -122,21 +122,30 @@ export const generateBackup = async (req: Request, res: Response) => {
 };
 
 // @desc    Trigger daily backups for all organizations (For Vercel Crons)
-// @route   POST /api/backups/trigger-daily
+// @route   GET /api/backups/trigger-daily
 export const triggerDailyBackups = async (req: Request, res: Response) => {
-    // Basic shared secret check if provided in ENV
-    const cronSecret = process.env.CRON_SECRET;
-    const providedSecret = req.headers['authorization']?.replace('Bearer ', '');
+    // 1. Check for Vercel's Native Cron Header (Highly Secure)
+    const isVercelCron = req.headers['x-vercel-cron'] === '1';
     
-    if (cronSecret && (providedSecret !== cronSecret)) {
+    // 2. Check for Manual Shared Secret (Optional Backup)
+    const cronSecret = process.env.CRON_SECRET;
+    const authHeader = req.headers['authorization']?.replace('Bearer ', '');
+    const querySecret = req.query.secret as string;
+    
+    const isAuthorized = isVercelCron || 
+                        (cronSecret && (authHeader === cronSecret || querySecret === cronSecret));
+    
+    if (!isAuthorized) {
+        console.warn(`[Security] Unauthorized attempt to trigger daily backups from IP: ${req.ip}`);
         return res.status(401).json({ message: 'Unauthorized Cron Trigger' });
     }
 
     try {
         const { runDailyBackups } = require('../services/backupService');
         const results = await runDailyBackups();
-        res.json({ message: 'Daily backups processed', results });
+        res.json({ message: 'Daily backups processed successfully', results });
     } catch (error) {
+        console.error('[BackupController] Error in triggerDailyBackups:', error);
         res.status(500).json({ message: 'Error triggering daily backups', error: String(error) });
     }
 };

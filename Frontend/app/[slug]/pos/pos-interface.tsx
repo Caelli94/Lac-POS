@@ -988,23 +988,23 @@ export function PosInterface({ initialProducts, initialCustomers, initialPriceLi
 
             {/* PAYMENT MODAL */}
             <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
-                <DialogContent className="max-w-[900px] bg-white rounded-3xl p-0 border-none shadow-2xl overflow-hidden">
-                    <DialogHeader className="p-8 border-b border-slate-100">
-                        <div className="flex justify-between items-center">
+                <DialogContent className="w-[95vw] sm:max-w-[900px] max-h-[95vh] bg-white rounded-3xl p-0 border-none shadow-2xl overflow-hidden flex flex-col transition-all duration-300">
+                    <DialogHeader className="p-4 md:p-8 border-b border-slate-100 shrink-0">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                             <div>
-                                <DialogTitle className="text-xl font-black uppercase text-slate-800 tracking-tight">Caja / Registrar Pago</DialogTitle>
+                                <DialogTitle className="text-lg md:text-xl font-black uppercase text-slate-800 tracking-tight">Caja / Registrar Pago</DialogTitle>
                                 <DialogDescription className="hidden">Completa los datos de pago y facturación</DialogDescription>
                             </div>
-                            <div className="text-right">
+                            <div className="text-left md:text-right w-full md:w-auto bg-slate-50 md:bg-transparent p-3 md:p-0 rounded-xl">
                                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Total a Cobrar</p>
-                                <p className="text-3xl font-black text-slate-900 leading-none">{currency}{total.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</p>
+                                <p className="text-2xl md:text-3xl font-black text-slate-900 leading-none">{currency}{total.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</p>
                             </div>
                         </div>
                     </DialogHeader>
 
-                    <div className="grid grid-cols-12 divide-x divide-slate-100 h-[600px]">
+                    <div className="grid grid-cols-1 md:grid-cols-12 divide-y md:divide-y-0 md:divide-x divide-slate-100 flex-1 overflow-y-auto">
                         {/* Columna Izquierda: Información de Venta y Ajustes */}
-                        <div className="col-span-12 md:col-span-5 p-8 space-y-6 overflow-y-auto bg-slate-50/30">
+                        <div className="col-span-12 md:col-span-5 p-4 md:p-8 space-y-6 overflow-y-auto bg-slate-50/30">
                             {/* 1. Cliente y Tipo de Venta (Arriba a la Izquierda) */}
                             <div className="space-y-4 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
                                 <CustomerSearch customers={initialCustomers} selectedId={selectedCustomerId} onSelect={setSelectedCustomerId} />
@@ -1102,7 +1102,7 @@ export function PosInterface({ initialProducts, initialCustomers, initialPriceLi
                         </div>
 
                         {/* Gestión de Pagos */}
-                        <div className="col-span-12 md:col-span-7 p-8 flex flex-col justify-between bg-white overflow-y-auto">
+                        <div className="col-span-12 md:col-span-7 p-4 md:p-8 flex flex-col justify-between bg-white overflow-y-auto">
                             <div className="space-y-8">
                                 <div className="flex items-center gap-3">
                                     <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-[#0f172a]/40">Gestión de Cobro</h4>
@@ -1110,10 +1110,10 @@ export function PosInterface({ initialProducts, initialCustomers, initialPriceLi
                                 <PaymentComposer key={paymentResetKey} totalAmount={total} customer={selectedCustomer} onPaymentsChange={setPayments} />
                             </div>
 
-                            <div className="space-y-4 pt-10">
+                            <div className="space-y-4 pt-6 md:pt-10">
                                 <Button
                                     size="lg"
-                                    className="w-full h-16 rounded-2xl bg-slate-950 hover:bg-black font-black uppercase tracking-[0.3em] text-sm shadow-xl shadow-slate-200 transition-all group text-white"
+                                    className="w-full h-14 md:h-16 rounded-2xl bg-slate-950 hover:bg-black font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-xs md:text-sm shadow-xl shadow-slate-200 transition-all group text-white"
                                     disabled={isPending || (payments.reduce((a, b) => a + b.amount, 0) < total - 0.05)}
                                     onClick={() => {
                                         handleCheckout();
@@ -1127,7 +1127,7 @@ export function PosInterface({ initialProducts, initialCustomers, initialPriceLi
                                 </Button>
                                 <Button
                                     variant="ghost"
-                                    className="w-full h-12 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all"
+                                    className="w-full h-10 md:h-12 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-2xl font-black uppercase tracking-[0.2em] text-[9px] md:text-[10px] transition-all"
                                     onClick={() => setIsPaymentModalOpen(false)}
                                 >
                                     Seguir Editando Carrito
@@ -1140,7 +1140,7 @@ export function PosInterface({ initialProducts, initialCustomers, initialPriceLi
 
             {/* ERROR MODAL */}
             <Dialog open={errorModal.open} onOpenChange={(open) => !open && setErrorModal(prev => ({ ...prev, open: false }))}>
-                <DialogContent className="max-w-[440px] bg-white rounded-[2.5rem] p-10 border-none shadow-2xl z-[150] overflow-hidden">
+                <DialogContent className="w-[95vw] sm:max-w-[440px] bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 border-none shadow-2xl z-[150] overflow-hidden transition-all">
                     <DialogHeader>
                         <DialogTitle className="text-3xl font-black uppercase tracking-tighter text-center text-red-600 mb-2">
                             Error en la Venta

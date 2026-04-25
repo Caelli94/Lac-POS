@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useTransition, useEffect, useCallback } from 'react'
 import { Search, Trash2, Save, Truck, Plus, Loader2, AlertCircle, ShoppingCart, Filter, ChevronLeft, ChevronRight, Package, Check, Store } from 'lucide-react'
@@ -142,8 +142,8 @@ export function PurchaseForm({ products: initialProducts, suppliers, branches, o
             setSelectedProductForVariants(product)
             // Por defecto DESACTIVADAS por pedido del usuario
             const initialSelections: Record<string, boolean> = {}
-            product.variants.forEach(v => {
-                initialSelections[v._id] = false
+            product.variants.forEach((v, idx) => {
+                initialSelections[`${v._id}-${idx}`] = false
             })
             setVariantSelections(initialSelections)
             setIsVariantModalOpen(true)
@@ -172,8 +172,8 @@ export function PurchaseForm({ products: initialProducts, suppliers, branches, o
         if (!selectedProductForVariants) return
 
         const newCart: PurchaseItem[] = []
-        selectedProductForVariants.variants?.forEach(v => {
-            if (variantSelections[v._id]) {
+        selectedProductForVariants.variants?.forEach((v, idx) => {
+            if (variantSelections[`${v._id}-${idx}`]) {
                 const item: PurchaseItem = {
                     ...selectedProductForVariants,
                     quantity: 1,
@@ -189,10 +189,10 @@ export function PurchaseForm({ products: initialProducts, suppliers, branches, o
 
         setCart(prev => {
             const updatedPrev = prev.filter(item =>
-                !(selectedProductForVariants.id === item.id && newCart.some(newItem => newItem.variant_id === item.variant_id))
+                !(selectedProductForVariants.id === item.id && newCart.some(newItem => newItem.variant_id === item.variant_id && newItem.variant_name === item.variant_name))
             )
             const itemsToAdd = newCart.filter(newItem =>
-                !prev.some(item => item.id === newItem.id && item.variant_id === newItem.variant_id)
+                !prev.some(item => item.id === newItem.id && item.variant_id === newItem.variant_id && item.variant_name === newItem.variant_name)
             )
 
             if (itemsToAdd.length === 0 && newCart.length > 0) {
@@ -209,14 +209,14 @@ export function PurchaseForm({ products: initialProducts, suppliers, branches, o
     }
 
     // 3. Eliminar item de la lista
-    const removeFromCart = (id: string, variantId?: string) => {
-        setCart(prev => prev.filter(item => !(item.id === id && item.variant_id === variantId)))
+    const removeFromCart = (id: string, variantId?: string, variantName?: string) => {
+        setCart(prev => prev.filter(item => !(item.id === id && item.variant_id === variantId && item.variant_name === variantName)))
     }
 
     // 4. Actualizar cantidad o costo unitario
-    const updateItem = (id: string, field: 'quantity' | 'cost' | 'lot_number' | 'expiration_date', value: any, variantId?: string) => {
+    const updateItem = (id: string, field: 'quantity' | 'cost' | 'lot_number' | 'expiration_date', value: any, variantId?: string, variantName?: string) => {
         setCart(prev => prev.map(item =>
-            (item.id === id && item.variant_id === variantId) ? { ...item, [field]: value } : item
+            (item.id === id && item.variant_id === variantId && item.variant_name === variantName) ? { ...item, [field]: value } : item
         ))
     }
 
@@ -367,11 +367,11 @@ export function PurchaseForm({ products: initialProducts, suppliers, branches, o
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 gap-3 pb-4">
-                                    {products.map(product => {
+                                    {products.map((product, idx) => {
                                         const isOut = product.current_stock <= 0;
                                         const isLow = product.current_stock > 0 && product.current_stock <= 5;
                                         return (
-                                            <div key={product.id} className="flex flex-col gap-1">
+                                            <div key={`${product.id}-${idx}`} className="flex flex-col gap-1">
                                                 <div
                                                     onClick={() => setExpandedProduct(expandedProduct === product.id ? null : product.id)}
                                                     className={cn(
@@ -446,8 +446,8 @@ export function PurchaseForm({ products: initialProducts, suppliers, branches, o
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
-                                                                {product.variants?.map(v => (
-                                                                    <tr key={v._id} className="border-b border-slate-100 hover:bg-white/60 transition-colors">
+                                                                {product.variants?.map((v, vIdx) => (
+                                                                    <tr key={`${v._id}-${vIdx}`} className="border-b border-slate-100 hover:bg-white/60 transition-colors">
                                                                         <td className="px-4 py-2 font-bold text-slate-700 uppercase">{v.color} / {v.size}</td>
                                                                         {branches.map(b => {
                                                                             const vStocks = (v as any).branch_stocks || {};
@@ -614,7 +614,7 @@ export function PurchaseForm({ products: initialProducts, suppliers, branches, o
                                                 type="number"
                                                 min={0}
                                                 value={item.quantity}
-                                                onChange={e => updateItem(item.id, 'quantity', parseInt(e.target.value) || 0, item.variant_id)}
+                                                onChange={e => updateItem(item.id, 'quantity', parseInt(e.target.value) || 0, item.variant_id, item.variant_name)}
                                                 className="h-8 text-center px-1 font-mono text-xs border-slate-200"
                                             />
                                         </div>
@@ -626,7 +626,7 @@ export function PurchaseForm({ products: initialProducts, suppliers, branches, o
                                                     min={0}
                                                     step={0.01}
                                                     value={item.cost}
-                                                    onChange={e => updateItem(item.id, 'cost', parseFloat(e.target.value) || 0, item.variant_id)}
+                                                    onChange={e => updateItem(item.id, 'cost', parseFloat(e.target.value) || 0, item.variant_id, item.variant_name)}
                                                     className="h-8 pl-5 pr-1 text-right font-mono text-xs border-slate-200"
                                                     placeholder="0.00"
                                                 />
@@ -637,7 +637,7 @@ export function PurchaseForm({ products: initialProducts, suppliers, branches, o
                                                 ${(item.quantity * item.cost).toFixed(2)}
                                             </span>
                                             <button
-                                                onClick={() => removeFromCart(item.id, item.variant_id)}
+                                                onClick={() => removeFromCart(item.id, item.variant_id, item.variant_name)}
                                                 className="h-6 w-6 flex items-center justify-center rounded hover:bg-red-100 text-slate-400 hover:text-red-600 transition-colors shrink-0"
                                             >
                                                 <Trash2 size={14} />
@@ -654,7 +654,7 @@ export function PurchaseForm({ products: initialProducts, suppliers, branches, o
                                                     <span className="text-[8px] font-black text-amber-600 uppercase">Lote:</span>
                                                     <Input
                                                         value={item.lot_number}
-                                                        onChange={e => updateItem(item.id, 'lot_number', e.target.value, item.variant_id)}
+                                                        onChange={e => updateItem(item.id, 'lot_number', e.target.value, item.variant_id, item.variant_name)}
                                                         placeholder="Nº Lote..."
                                                         className="h-7 text-[10px] font-bold border-amber-100 bg-amber-50/30 focus:bg-white transition-all uppercase"
                                                     />
@@ -666,7 +666,7 @@ export function PurchaseForm({ products: initialProducts, suppliers, branches, o
                                                     <Input
                                                         type="date"
                                                         value={item.expiration_date}
-                                                        onChange={e => updateItem(item.id, 'expiration_date', e.target.value, item.variant_id)}
+                                                        onChange={e => updateItem(item.id, 'expiration_date', e.target.value, item.variant_id, item.variant_name)}
                                                         className="h-7 text-[10px] font-bold border-blue-100 bg-blue-50/30 focus:bg-white transition-all"
                                                     />
                                                 </div>
@@ -710,61 +710,64 @@ export function PurchaseForm({ products: initialProducts, suppliers, branches, o
             </div>
             {/* MODAL DE SELECCIÓN DE VARIANTES */}
             <Dialog open={isVariantModalOpen} onOpenChange={setIsVariantModalOpen}>
-                <DialogContent className="max-w-md rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden">
-                    <DialogHeader className="p-6 pb-2 bg-gradient-to-br from-slate-50 to-white">
-                        <DialogTitle className="font-black uppercase tracking-tighter text-xl text-slate-900">
+                <DialogContent className="w-[95vw] sm:max-w-md rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden flex flex-col max-h-[90vh]">
+                    <DialogHeader className="p-6 pb-4 bg-gradient-to-br from-slate-50 to-white shrink-0">
+                        <DialogTitle className="font-black uppercase tracking-tighter text-lg md:text-xl text-slate-900">
                             Seleccionar Variantes
                         </DialogTitle>
-                        <DialogDescription className="text-xs font-medium text-slate-500">
+                        <DialogDescription className="text-[10px] md:text-xs font-medium text-slate-500">
                             {selectedProductForVariants?.name} - Marcá los talles/colores que vas a cargar.
                         </DialogDescription>
                     </DialogHeader>
 
                     <Separator className="opacity-50" />
 
-                    <div className="p-4 max-h-[60vh] overflow-y-auto">
+                    <div className="p-4 overflow-y-auto flex-1 custom-scrollbar">
                         <div className="space-y-2">
-                            {selectedProductForVariants?.variants?.map(variant => (
-                                <div
-                                    key={variant._id}
-                                    onClick={() => setVariantSelections(prev => ({ ...prev, [variant._id]: !prev[variant._id] }))}
-                                    className={cn(
-                                        "flex items-center justify-between p-3 rounded-2xl border-2 transition-all cursor-pointer",
-                                        variantSelections[variant._id]
-                                            ? "border-blue-500 bg-blue-50/50"
-                                            : "border-slate-100 bg-white hover:border-slate-200"
-                                    )}
-                                >
-                                    <div className="flex flex-col">
-                                        <span className="text-xs font-black uppercase text-slate-800 tracking-tight">
-                                            {variant.color} / {variant.size}
-                                        </span>
-                                        <span className="text-[10px] font-bold text-slate-400">
-                                            Stock actual: {variant.stock}
-                                        </span>
+                            {selectedProductForVariants?.variants?.map((variant, idx) => {
+                                const selectionKey = `${variant._id}-${idx}`;
+                                return (
+                                    <div
+                                        key={selectionKey}
+                                        onClick={() => setVariantSelections(prev => ({ ...prev, [selectionKey]: !prev[selectionKey] }))}
+                                        className={cn(
+                                            "flex items-center justify-between p-3 rounded-2xl border-2 transition-all cursor-pointer",
+                                            variantSelections[selectionKey]
+                                                ? "border-blue-500 bg-blue-50/50"
+                                                : "border-slate-100 bg-white hover:border-slate-200"
+                                        )}
+                                    >
+                                        <div className="flex flex-col">
+                                            <span className="text-xs font-black uppercase text-slate-800 tracking-tight">
+                                                {variant.color} / {variant.size}
+                                            </span>
+                                            <span className="text-[10px] font-bold text-slate-400">
+                                                Stock actual: {variant.stock}
+                                            </span>
+                                        </div>
+                                        <div className={cn(
+                                            "h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all",
+                                            variantSelections[selectionKey] ? "bg-blue-600 border-blue-600" : "border-slate-200"
+                                        )}>
+                                            {variantSelections[selectionKey] && <Check size={12} className="text-white" />}
+                                        </div>
                                     </div>
-                                    <div className={cn(
-                                        "h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all",
-                                        variantSelections[variant._id] ? "bg-blue-600 border-blue-600" : "border-slate-200"
-                                    )}>
-                                        {variantSelections[variant._id] && <Check size={12} className="text-white" />}
-                                    </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
 
-                    <DialogFooter className="p-4 bg-slate-50 gap-2">
+                    <DialogFooter className="p-4 bg-slate-50 gap-2 shrink-0">
                         <Button
                             variant="ghost"
                             onClick={() => setIsVariantModalOpen(false)}
-                            className="rounded-xl font-bold uppercase text-[10px] tracking-widest h-10"
+                            className="rounded-xl font-bold uppercase text-[9px] md:text-[10px] tracking-widest h-10"
                         >
                             Cancelar
                         </Button>
                         <Button
                             onClick={addVariantsToCart}
-                            className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black uppercase text-[10px] tracking-widest h-10 shadow-lg shadow-blue-200 flex-1"
+                            className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black uppercase text-[9px] md:text-[10px] tracking-widest h-10 shadow-lg shadow-blue-200 flex-1"
                         >
                             Agregar Selección
                         </Button>

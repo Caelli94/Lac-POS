@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { getBackups, generateBackup, downloadBackup, restore, getRestoreHistory, getRestoreLogDetails, analyzeBackup, triggerDailyBackups } from '../controllers/backupController';
 import { protect } from '../middlewares/authMiddleware';
+import { backupLimiter } from '../middlewares/securityMiddleware';
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
@@ -33,7 +34,7 @@ router.use(protect);
 
 // List and Create Backups
 router.get('/', getBackups);
-router.post('/', generateBackup);
+router.post('/', backupLimiter, generateBackup);
 
 // Download backup
 router.get('/download/:filename', downloadBackup);

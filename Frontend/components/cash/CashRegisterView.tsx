@@ -927,12 +927,12 @@ export default function CashRegisterView({
 
             <Dialog open={!!activeBox} onOpenChange={() => setActiveBox(null)}>
                 <DialogContent className={cn(
-                    "rounded-[32px] overflow-hidden p-0 border-none shadow-2xl sm:max-w-lg", // Default width matched to requested size
+                    "rounded-[24px] md:rounded-[32px] overflow-hidden p-0 border-none shadow-2xl w-[95vw] sm:max-w-lg max-h-[90vh] flex flex-col transition-all duration-300",
                     activeBox === 'abrir' && "sm:max-w-4xl",
-                    activeBox === 'manual' && "sm:max-w-lg bg-white border-none p-0 shadow-2xl overflow-hidden flex flex-col rounded-[2rem]"
+                    activeBox === 'manual' && "sm:max-w-lg bg-white border-none p-0 shadow-2xl flex flex-col rounded-[2rem]"
                 )}>
-                    <DialogHeader className="bg-slate-50 p-6 border-b border-slate-100 shrink-0">
-                        <DialogTitle className="text-xl font-black uppercase tracking-tight">
+                    <DialogHeader className="bg-slate-50 p-4 md:p-6 border-b border-slate-100 shrink-0">
+                        <DialogTitle className="text-lg md:text-xl font-black uppercase tracking-tight">
                             {activeBox === 'abrir' ? "Gestión de Caja" :
                                 activeBox === 'ingresos' ? "Resumen de Ingresos" :
                                     activeBox === 'egresos' ? "Detalle de Egresos" :
@@ -941,7 +941,7 @@ export default function CashRegisterView({
                         </DialogTitle>
                     </DialogHeader>
 
-                    <div className="p-8">
+                    <div className="p-4 md:p-8 overflow-y-auto flex-1 custom-scrollbar">
                         {activeBox === 'global' && (
                             <div className="space-y-6 text-slate-900">
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -966,7 +966,7 @@ export default function CashRegisterView({
                         )}
 
                         {activeBox === 'abrir' && (
-                            <div className="space-y-6 min-h-[600px]">
+                            <div className="space-y-6 min-h-0 md:min-h-[500px]">
                                 <div className="flex bg-slate-100 p-1 rounded-xl">
                                     {['Turnos Hoy', 'Historial'].map((tab: any) => (
                                         <button key={tab} onClick={() => setActiveTab(tab)} className={cn("flex-1 py-2 text-xs font-bold rounded-lg transition-all", activeTab === tab ? "bg-white shadow-sm text-black" : "text-slate-400")}>{tab}</button>
@@ -976,18 +976,18 @@ export default function CashRegisterView({
                                 {activeTab === 'Turnos Hoy' && (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-slate-900">
                                         <div className="space-y-6">
-                                            <div className="p-6 bg-slate-50 rounded-2xl border">
+                                            <div className="p-4 md:p-6 bg-slate-50 rounded-2xl border">
                                                 <p className="text-[10px] font-bold uppercase text-slate-400">Caja Inicial</p>
-                                                <p className="text-4xl font-black text-pink-600">{formatMoney(Number(isRegisterOpen ? (activeSession?.openingBalance || activeSession?.opening_balance) : openingAmount) || 0)}</p>
+                                                <p className="text-3xl md:text-4xl font-black text-pink-600">{formatMoney(Number(isRegisterOpen ? (activeSession?.openingBalance || activeSession?.opening_balance) : openingAmount) || 0)}</p>
                                             </div>
-                                            <div className="p-6 bg-white border rounded-2xl space-y-3 shadow-sm text-sm">
+                                            <div className="p-4 md:p-6 bg-white border rounded-2xl space-y-3 shadow-sm text-sm">
                                                 <div className="flex justify-between"><span>Ventas Efectivo:</span><span className="font-bold text-emerald-600">+{formatMoney(stats.ingresosCash)}</span></div>
                                                 <div className="flex justify-between"><span>Egresos/Gastos:</span><span className="font-bold text-red-600">-{formatMoney(stats.egresos)}</span></div>
                                                 <div className="pt-2 mt-2 border-t border-dashed">
                                                     <div className="flex justify-between items-center text-slate-500 text-xs"><span>Balance del Turno:</span><span className="font-bold">{formatMoney(stats.balanceNeto)}</span></div>
                                                     <div className="flex justify-between items-center text-slate-500 text-xs mt-1"><span>+ Caja Inicial:</span><span className="font-bold">{formatMoney(stats.saldoInicial)}</span></div>
                                                 </div>
-                                                <div className="pt-4 border-t flex justify-between items-end"><span className="text-xs font-bold uppercase text-blue-900">Total Esperado (Físico):</span><span className="text-3xl font-black text-blue-600">{formatMoney(stats.saldoTotalEsperado)}</span></div>
+                                                <div className="pt-4 border-t flex justify-between items-end"><span className="text-xs font-bold uppercase text-blue-900">Total Esperado (Físico):</span><span className="text-2xl md:text-3xl font-black text-blue-600">{formatMoney(stats.saldoTotalEsperado)}</span></div>
                                             </div>
                                             {/* Stats Cards */}
                                             {stats.balanceNeto < 0 && (
@@ -997,7 +997,7 @@ export default function CashRegisterView({
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="p-8 border-2 border-dashed rounded-[32px] space-y-5">
+                                        <div className="p-5 md:p-8 border-2 border-dashed rounded-[24px] md:rounded-[32px] space-y-5">
                                             <div className="space-y-1">
                                                 <label className="text-[10px] font-black uppercase text-slate-400">{isRegisterOpen ? 'Cierre de Caja' : 'Monto de Apertura'}</label>
                                             </div>
@@ -1057,7 +1057,18 @@ export default function CashRegisterView({
                                                         </div>
                                                     )
                                                 ) : (
-                                                    <Input type="number" value={openingAmount} onChange={(e) => setOpeningAmount(e.target.value)} placeholder="0.00" className="h-14 text-2xl font-black" />
+                                                    <div className="space-y-1">
+                                                        <div className="relative">
+                                                            <Input
+                                                                type="number"
+                                                                value={openingAmount}
+                                                                onChange={(e) => setOpeningAmount(e.target.value)}
+                                                                placeholder="0.00"
+                                                                className="h-14 text-2xl font-black pl-8"
+                                                            />
+                                                            <span className="absolute left-3 top-4 text-slate-400 font-bold">$</span>
+                                                        </div>
+                                                    </div>
                                                 )}
                                             </div>
 
@@ -1090,18 +1101,18 @@ export default function CashRegisterView({
                                 {activeTab === 'Historial' && (
                                     <div className="space-y-4 text-slate-900">
 
-                                        <div className="flex gap-2 items-end flex-wrap bg-slate-50 p-4 rounded-xl border">
-                                            <div className="space-y-1">
+                                        <div className="flex gap-2 items-end flex-wrap bg-slate-50 p-3 md:p-4 rounded-xl border">
+                                            <div className="space-y-1 flex-1 min-w-[120px]">
                                                 <label className="text-[10px] font-bold uppercase text-slate-500">Desde</label>
                                                 <Input type="date" value={historyFrom} onChange={(e) => setHistoryFrom(e.target.value)} className="h-9 bg-white" />
                                             </div>
-                                            <div className="space-y-1">
+                                            <div className="space-y-1 flex-1 min-w-[120px]">
                                                 <label className="text-[10px] font-bold uppercase text-slate-500">Hasta</label>
                                                 <Input type="date" value={historyTo} onChange={(e) => setHistoryTo(e.target.value)} className="h-9 bg-white" />
                                             </div>
 
                                             {allBranches.length > 0 && (
-                                                <div className="space-y-1 min-w-[150px]">
+                                                <div className="space-y-1 flex-1 min-w-[150px]">
                                                     <label className="text-[10px] font-bold uppercase text-slate-500">Sucursal</label>
                                                     <Select value={selectedBranch} onValueChange={setSelectedBranch}>
                                                         <SelectTrigger className="h-9 bg-white"><SelectValue placeholder="Todas" /></SelectTrigger>
@@ -1113,7 +1124,7 @@ export default function CashRegisterView({
                                                 </div>
                                             )}
 
-                                            <div className="space-y-1 min-w-[150px]">
+                                            <div className="space-y-1 flex-1 min-w-[150px]">
                                                 <label className="text-[10px] font-bold uppercase text-slate-500">Caja</label>
                                                 <Select value={selectedRegister} onValueChange={setSelectedRegister}>
                                                     <SelectTrigger className="h-9 bg-white"><SelectValue placeholder="Todas" /></SelectTrigger>
@@ -1124,7 +1135,7 @@ export default function CashRegisterView({
                                                 </Select>
                                             </div>
 
-                                            <Button size="sm" onClick={handleHistoryFilter} className="h-9 bg-slate-900 text-white hover:bg-slate-700">
+                                            <Button size="sm" onClick={handleHistoryFilter} className="h-9 bg-slate-900 text-white hover:bg-slate-700 w-full md:w-auto">
                                                 <Filter className="w-4 h-4 mr-2" />
                                                 Filtrar
                                             </Button>

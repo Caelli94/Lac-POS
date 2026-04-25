@@ -1,4 +1,3 @@
-
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import mongoSanitize from 'express-mongo-sanitize';
@@ -30,6 +29,17 @@ export const chatbotLimiter = rateLimit({
     max: 50, // Max 50 messages per hour per IP
     message: {
         message: 'Has alcanzado el límite de consultas al asistente por esta hora. Intenta más tarde.'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// 4. Rate Limiter for Backups (Very Strict - prevent storage/CPU abuse)
+export const backupLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 5, // Max 5 manual backups per hour per IP
+    message: {
+        message: 'Límite de respaldos manuales alcanzado. Por seguridad, solo podés generar 5 por hora.'
     },
     standardHeaders: true,
     legacyHeaders: false,
