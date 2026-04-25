@@ -45,7 +45,7 @@ export function CartItemEditor({ item, isOpen, onClose, onSave, onDelete }: Prop
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[320px] bg-white rounded-3xl p-6 shadow-2xl border-0">
+            <DialogContent className="w-[95vw] sm:max-w-[320px] bg-white rounded-3xl p-6 shadow-2xl border-0">
                 <DialogHeader className="mb-4">
                     <DialogTitle className="text-lg font-black tracking-tight text-slate-900 text-center">
                         Editar Ítem

@@ -109,42 +109,45 @@ export function TeamManager({ orgId }: { orgId: string }) {
                             Agregar Miembro
                         </Button>
                     </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Nuevo Miembro</DialogTitle>
-                            <DialogDescription>
+                    <DialogContent className="w-[95vw] sm:max-w-md rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl max-h-[95vh] flex flex-col">
+                        <DialogHeader className="bg-slate-50 p-6 border-b border-slate-100 shrink-0">
+                            <DialogTitle className="text-xl font-black uppercase tracking-tight text-slate-800">Nuevo Miembro</DialogTitle>
+                            <DialogDescription className="text-xs font-bold text-slate-400 uppercase tracking-widest">
                                 Crea una cuenta para un nuevo empleado.
                             </DialogDescription>
                         </DialogHeader>
-                        <div className="space-y-4 py-4">
+                        <div className="space-y-4 p-6 md:p-8 bg-white text-slate-900 overflow-y-auto">
                             <div className="space-y-2">
-                                <Label>Nombre</Label>
+                                <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Nombre</Label>
                                 <Input
                                     value={newMember.name}
                                     onChange={e => setNewMember({ ...newMember, name: e.target.value })}
                                     placeholder="Ej. Juan Pérez"
+                                    className="h-11 rounded-xl font-bold uppercase border-slate-200 bg-slate-50/50 shadow-none px-4 text-slate-900 focus-visible:ring-1 focus-visible:ring-indigo-500"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>Email</Label>
+                                <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Email</Label>
                                 <Input
                                     value={newMember.email}
                                     onChange={e => setNewMember({ ...newMember, email: e.target.value })}
                                     placeholder="juan@empresa.com"
+                                    className="h-11 rounded-xl font-bold border-slate-200 bg-slate-50/50 shadow-none px-4 text-slate-900 focus-visible:ring-1 focus-visible:ring-indigo-500"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>Contraseña</Label>
+                                <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Contraseña</Label>
                                 <Input
                                     value={newMember.password}
                                     onChange={e => setNewMember({ ...newMember, password: e.target.value })}
                                     type="password"
+                                    className="h-11 rounded-xl font-bold border-slate-200 bg-slate-50/50 shadow-none px-4 text-slate-900 focus-visible:ring-1 focus-visible:ring-indigo-500"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>Rol</Label>
+                                <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Rol</Label>
                                 <select
-                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="flex h-11 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2 text-sm font-bold uppercase text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500 transition-all cursor-pointer"
                                     value={newMember.role}
                                     onChange={e => setNewMember({ ...newMember, role: e.target.value })}
                                 >
@@ -153,9 +156,9 @@ export function TeamManager({ orgId }: { orgId: string }) {
                                 </select>
                             </div>
                         </div>
-                        <DialogFooter>
-                            <Button variant="outline" onClick={() => setIsOpen(false)}>Cancelar</Button>
-                            <Button onClick={handleAdd} disabled={saving}>
+                        <DialogFooter className="p-6 bg-slate-50 border-t border-slate-100 shrink-0 flex-row gap-3">
+                            <Button variant="ghost" onClick={() => setIsOpen(false)} className="rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">Cancelar</Button>
+                            <Button onClick={handleAdd} disabled={saving} className="rounded-xl bg-slate-900 hover:bg-black text-white px-8 h-11 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-slate-200 transition-all flex-1">
                                 {saving ? <Loader2 className="animate-spin mr-2" /> : null}
                                 Crear Usuario
                             </Button>

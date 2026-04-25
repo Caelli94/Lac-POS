@@ -90,7 +90,7 @@ export function VariantSelector({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden rounded-[1.5rem] border-none shadow-2xl font-sans bg-white ring-0 outline-none">
+            <DialogContent className="w-[95vw] sm:max-w-[800px] p-0 overflow-hidden rounded-[1.5rem] border-none shadow-2xl font-sans bg-white ring-0 outline-none max-h-[95vh] flex flex-col">
 
                 {/* Header */}
                 <div className="flex justify-between items-center bg-slate-50 p-6 border-b border-slate-100">

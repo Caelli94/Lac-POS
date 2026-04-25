@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { Save, Loader2, ImageUp, X, RefreshCw, Plus, Search, Calculator, Store, Box, LayoutGrid, Check, AlertCircle, Trash2, ChevronsUpDown, ScanBarcode, Wand2, Tag, Package, ArrowUpDown, Eye, FolderPlus, Edit, ImageOff, Printer, ChevronLeft, ChevronRight, AlertTriangle, Settings2, WifiOff, Cloud, Globe } from 'lucide-react';
@@ -797,7 +797,7 @@ export function ProductTableManager({ initialProducts, categories, suppliers, sl
 
             {/* MODAL PRODUCTO: ESTANDARIZADO */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="max-w-5xl bg-white rounded-[2rem] p-0 border-none shadow-2xl overflow-hidden h-[90vh] flex flex-col">
+                <DialogContent className="w-[95vw] sm:max-w-5xl bg-white rounded-[2rem] p-0 border-none shadow-2xl overflow-hidden h-[95vh] md:h-[90vh] flex flex-col transition-all">
                     <DialogHeader className="bg-slate-50 p-6 border-b border-slate-100 shrink-0">
                         <DialogTitle className="text-xl font-black uppercase tracking-tight">
                             {selectedProduct ? 'Editar Producto' : 'Nuevo Producto'}
@@ -830,7 +830,7 @@ export function ProductTableManager({ initialProducts, categories, suppliers, sl
 
             {/* MODALES AUXILIARES */}
             <Dialog open={isMassDeleteOpen} onOpenChange={setIsMassDeleteOpen}>
-                <DialogContent className="max-w-[400px] bg-white rounded-[2rem] p-8 border-none shadow-2xl z-[200]">
+                <DialogContent className="w-[90vw] sm:max-w-[400px] bg-white rounded-[2rem] p-8 border-none shadow-2xl z-[200]">
                     <DialogHeader>
                         <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-center">¿Eliminar Selección?</DialogTitle>
                     </DialogHeader>
@@ -845,7 +845,7 @@ export function ProductTableManager({ initialProducts, categories, suppliers, sl
             </Dialog>
 
             <Dialog open={isDeleteProductOpen} onOpenChange={setIsDeleteProductOpen}>
-                <DialogContent className="max-w-[400px] bg-white rounded-[2rem] p-8 border-none shadow-2xl z-[100]">
+                <DialogContent className="w-[90vw] sm:max-w-[400px] bg-white rounded-[2rem] p-8 border-none shadow-2xl z-[100]">
                     <DialogHeader>
                         <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-center">¿Eliminar Producto?</DialogTitle>
                     </DialogHeader>
@@ -860,7 +860,7 @@ export function ProductTableManager({ initialProducts, categories, suppliers, sl
             </Dialog>
 
             <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
-                <DialogContent className="max-w-md bg-white rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl">
+                <DialogContent className="w-[95vw] sm:max-w-md bg-white rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[90vh]">
                     <DialogHeader className="bg-slate-50 p-6 border-b border-slate-100 space-y-1 text-left relative">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-slate-100">
@@ -975,7 +975,7 @@ export function ProductTableManager({ initialProducts, categories, suppliers, sl
             </Dialog>
 
             <Dialog open={isConfirmDeleteOpen} onOpenChange={setIsConfirmDeleteOpen}>
-                <DialogContent className="max-w-[400px] bg-white rounded-[2rem] p-8 border-none shadow-2xl z-[100]">
+                <DialogContent className="w-[90vw] sm:max-w-[400px] bg-white rounded-[2rem] p-8 border-none shadow-2xl z-[100]">
                     <DialogHeader>
                         <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-center">¿Confirmar Borrado?</DialogTitle>
                     </DialogHeader>
@@ -990,7 +990,7 @@ export function ProductTableManager({ initialProducts, categories, suppliers, sl
             </Dialog>
 
             <Dialog open={isDuplicateAlertOpen} onOpenChange={setIsDuplicateAlertOpen}>
-                <DialogContent className="max-w-[400px] bg-white rounded-[2rem] p-8 border-none shadow-2xl z-[200]">
+                <DialogContent className="w-[90vw] sm:max-w-[400px] bg-white rounded-[2rem] p-8 border-none shadow-2xl z-[200]">
                     <DialogHeader>
                         <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-center">Rubro Repetido</DialogTitle>
                     </DialogHeader>

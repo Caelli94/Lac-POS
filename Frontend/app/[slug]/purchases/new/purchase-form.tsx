@@ -710,20 +710,18 @@ export function PurchaseForm({ products: initialProducts, suppliers, branches, o
             </div>
             {/* MODAL DE SELECCIÓN DE VARIANTES */}
             <Dialog open={isVariantModalOpen} onOpenChange={setIsVariantModalOpen}>
-                <DialogContent className="w-[95vw] sm:max-w-md rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden flex flex-col max-h-[90vh]">
-                    <DialogHeader className="p-6 pb-4 bg-gradient-to-br from-slate-50 to-white shrink-0">
+                <DialogContent className="w-[95vw] sm:max-w-md rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden flex flex-col max-h-[95vh]">
+                    <DialogHeader className="p-6 pb-4 bg-gradient-to-br from-slate-50 to-white shrink-0 border-b border-slate-100">
                         <DialogTitle className="font-black uppercase tracking-tighter text-lg md:text-xl text-slate-900">
                             Seleccionar Variantes
                         </DialogTitle>
-                        <DialogDescription className="text-[10px] md:text-xs font-medium text-slate-500">
-                            {selectedProductForVariants?.name} - Marcá los talles/colores que vas a cargar.
+                        <DialogDescription className="text-[10px] md:text-xs font-medium text-slate-500 uppercase tracking-widest mt-1">
+                            {selectedProductForVariants?.name}
                         </DialogDescription>
                     </DialogHeader>
 
-                    <Separator className="opacity-50" />
-
-                    <div className="p-4 overflow-y-auto flex-1 custom-scrollbar">
-                        <div className="space-y-2">
+                    <div className="p-4 md:p-6 overflow-y-auto flex-1 custom-scrollbar bg-white">
+                        <div className="space-y-3">
                             {selectedProductForVariants?.variants?.map((variant, idx) => {
                                 const selectionKey = `${variant._id}-${idx}`;
                                 return (
@@ -731,25 +729,25 @@ export function PurchaseForm({ products: initialProducts, suppliers, branches, o
                                         key={selectionKey}
                                         onClick={() => setVariantSelections(prev => ({ ...prev, [selectionKey]: !prev[selectionKey] }))}
                                         className={cn(
-                                            "flex items-center justify-between p-3 rounded-2xl border-2 transition-all cursor-pointer",
+                                            "flex items-center justify-between p-4 rounded-2xl border-2 transition-all cursor-pointer",
                                             variantSelections[selectionKey]
-                                                ? "border-blue-500 bg-blue-50/50"
-                                                : "border-slate-100 bg-white hover:border-slate-200"
+                                                ? "border-blue-500 bg-blue-50/50 shadow-sm"
+                                                : "border-slate-50 bg-slate-50/30 hover:border-slate-200"
                                         )}
                                     >
                                         <div className="flex flex-col">
                                             <span className="text-xs font-black uppercase text-slate-800 tracking-tight">
                                                 {variant.color} / {variant.size}
                                             </span>
-                                            <span className="text-[10px] font-bold text-slate-400">
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mt-0.5">
                                                 Stock actual: {variant.stock}
                                             </span>
                                         </div>
                                         <div className={cn(
-                                            "h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all",
-                                            variantSelections[selectionKey] ? "bg-blue-600 border-blue-600" : "border-slate-200"
+                                            "h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all",
+                                            variantSelections[selectionKey] ? "bg-blue-600 border-blue-600 shadow-md shadow-blue-100" : "border-slate-200 bg-white"
                                         )}>
-                                            {variantSelections[selectionKey] && <Check size={12} className="text-white" />}
+                                            {variantSelections[selectionKey] && <Check size={14} className="text-white" strokeWidth={4} />}
                                         </div>
                                     </div>
                                 );
@@ -757,19 +755,19 @@ export function PurchaseForm({ products: initialProducts, suppliers, branches, o
                         </div>
                     </div>
 
-                    <DialogFooter className="p-4 bg-slate-50 gap-2 shrink-0">
+                    <DialogFooter className="p-6 bg-slate-50 border-t border-slate-100 gap-3 shrink-0 flex-row">
                         <Button
                             variant="ghost"
                             onClick={() => setIsVariantModalOpen(false)}
-                            className="rounded-xl font-bold uppercase text-[9px] md:text-[10px] tracking-widest h-10"
+                            className="rounded-xl font-black uppercase text-[10px] tracking-widest h-12 flex-1 text-slate-400 hover:text-slate-600"
                         >
                             Cancelar
                         </Button>
                         <Button
                             onClick={addVariantsToCart}
-                            className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black uppercase text-[9px] md:text-[10px] tracking-widest h-10 shadow-lg shadow-blue-200 flex-1"
+                            className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black uppercase text-[10px] tracking-widest h-12 flex-[2] shadow-xl shadow-blue-100 transition-all active:scale-95"
                         >
-                            Agregar Selección
+                            Confirmar Selección
                         </Button>
                     </DialogFooter>
                 </DialogContent>

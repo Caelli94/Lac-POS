@@ -1294,12 +1294,12 @@ export function ProductForm({ initialData, isEditMode, orgId, slug, categories, 
                 </div>
 
                 <Dialog open={isPricingModalOpen} onOpenChange={setIsPricingModalOpen}>
-                    <DialogContent className="max-w-4xl bg-white rounded-[2rem] p-0 border-none shadow-2xl overflow-hidden font-sans">
+                    <DialogContent className="w-[95vw] sm:max-w-4xl bg-white rounded-[2rem] p-0 border-none shadow-2xl overflow-hidden font-sans max-h-[95vh] md:h-auto flex flex-col">
                         <DialogHeader className="sr-only"><DialogTitle>Gestor de Precios</DialogTitle></DialogHeader>
 
-                        <div className="flex h-[600px]">
+                        <div className="flex flex-col md:flex-row flex-1 overflow-y-auto md:overflow-hidden md:h-[600px]">
                             {/* LEFT COLUMN: COST */}
-                            <div className="w-[35%] bg-slate-50 border-r border-slate-100 p-8 flex flex-col justify-center relative overflow-hidden">
+                            <div className="w-full md:w-[35%] bg-slate-50 border-b md:border-b-0 md:border-r border-slate-100 p-8 flex flex-col justify-center relative overflow-hidden shrink-0">
                                 <div className="relative z-10 space-y-6">
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center block">Costo Base Global</Label>
@@ -1322,7 +1322,7 @@ export function ProductForm({ initialData, isEditMode, orgId, slug, categories, 
                             </div>
 
                             {/* RIGHT COLUMN: LISTS */}
-                            <div className="w-[65%] flex flex-col bg-slate-50">
+                            <div className="w-full md:w-[65%] flex flex-col bg-slate-50 min-h-0">
                                 <div className="p-6 border-b border-slate-100 bg-white flex justify-between items-center shadow-sm z-10">
                                     <h3 className="text-slate-800 font-black uppercase tracking-wide text-sm">Listas de Precios</h3>
                                     <Badge variant="secondary" className="bg-slate-100 text-slate-500">{lists.length} Listas Activas</Badge>
@@ -1404,7 +1404,7 @@ export function ProductForm({ initialData, isEditMode, orgId, slug, categories, 
                 </Dialog>
 
                 <Dialog open={showUpdateDateConfirm} onOpenChange={setShowUpdateDateConfirm}>
-                    <DialogContent className="max-w-sm bg-white rounded-[2rem] p-8 border-none shadow-2xl z-[200]">
+                    <DialogContent className="w-[90vw] sm:max-w-sm bg-white rounded-[2rem] p-8 border-none shadow-2xl z-[200]">
                         <DialogHeader>
                             <DialogTitle className="text-xl font-black uppercase tracking-tighter text-center">¿Actualizar Fecha?</DialogTitle>
                         </DialogHeader>

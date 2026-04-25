@@ -258,14 +258,14 @@ export function AgendaWidget({ orgId }: { orgId: string }) {
 
             {/* Create/Edit Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="max-w-[425px] rounded-[2rem] p-0 border-none shadow-2xl overflow-hidden bg-white z-[100]">
-                    <DialogHeader className="p-8 bg-slate-50 border-b border-slate-100 shrink-0">
-                        <DialogTitle className="text-2xl font-black text-slate-900 uppercase tracking-tighter">
+                <DialogContent className="w-[95vw] sm:max-w-[425px] rounded-[2rem] p-0 border-none shadow-2xl overflow-hidden bg-white z-[100] flex flex-col max-h-[95vh]">
+                    <DialogHeader className="p-6 md:p-8 bg-slate-50 border-b border-slate-100 shrink-0">
+                        <DialogTitle className="text-xl md:text-2xl font-black text-slate-900 uppercase tracking-tighter">
                             {editingTask ? 'Editar Tarea' : 'Nueva Tarea'}
                         </DialogTitle>
                     </DialogHeader>
 
-                    <div className="p-8 space-y-6">
+                    <div className="p-6 md:p-8 space-y-6 overflow-y-auto flex-1 custom-scrollbar">
                         <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Título de la Tarea</label>
                             <Input
@@ -315,20 +315,20 @@ export function AgendaWidget({ orgId }: { orgId: string }) {
                         </div>
                     </div>
 
-                    <DialogFooter className="p-8 bg-slate-50 border-t border-slate-100 shrink-0 gap-3">
+                    <DialogFooter className="p-6 md:p-8 bg-slate-50 border-t border-slate-100 shrink-0 gap-3 flex-row">
                         <Button
                             variant="ghost"
                             onClick={() => setIsDialogOpen(false)}
-                            className="h-12 rounded-xl font-bold uppercase text-[10px] tracking-widest text-slate-500 hover:bg-white hover:text-slate-900 transition-all flex-1"
+                            className="h-12 rounded-xl font-bold uppercase text-[9px] md:text-[10px] tracking-widest text-slate-500 hover:bg-white hover:text-slate-900 transition-all flex-1"
                         >
                             Cancelar
                         </Button>
                         <Button
                             onClick={handleSaveTask}
                             disabled={!newTaskTitle || !newTaskDate || creating}
-                            className="h-12 bg-slate-900 hover:bg-black text-white rounded-xl font-black uppercase text-[10px] tracking-widest px-8 shadow-lg shadow-slate-200 transition-all active:scale-95 flex-1"
+                            className="h-12 bg-slate-900 hover:bg-black text-white rounded-xl font-black uppercase text-[9px] md:text-[10px] tracking-widest px-4 md:px-8 shadow-lg shadow-slate-200 transition-all active:scale-95 flex-1"
                         >
-                            {creating ? 'Guardando...' : editingTask ? 'Actualizar' : 'Guardar Tarea'}
+                            {creating ? '...' : editingTask ? 'Actualizar' : 'Guardar'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -336,7 +336,7 @@ export function AgendaWidget({ orgId }: { orgId: string }) {
 
             {/* Delete Confirmation Dialog (Styled) */}
             <Dialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
-                <DialogContent className="max-w-[400px] bg-white rounded-[2rem] p-8 border-none shadow-2xl z-[100]">
+                <DialogContent className="w-[90vw] sm:max-w-[400px] bg-white rounded-[2rem] p-6 md:p-8 border-none shadow-2xl z-[100]">
                     <DialogHeader>
                         <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-center">¿ELIMINAR TAREA?</DialogTitle>
                     </DialogHeader>

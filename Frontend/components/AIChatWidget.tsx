@@ -179,14 +179,14 @@ export function AIChatWidget() {
     if (!isVisible) return null;
 
     return (
-        <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+        <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-50 flex flex-col items-end gap-3">
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
                         initial={performanceMode ? { opacity: 1, scale: 1 } : { opacity: 0, y: 30, scale: 0.9, filter: 'blur(10px)' }}
                         animate={{ opacity: 1, y: 0, scale: 1, filter: performanceMode ? 'none' : 'blur(0px)' }}
                         exit={performanceMode ? { opacity: 0 } : { opacity: 0, y: 30, scale: 0.9, filter: 'blur(10px)' }}
-                        className="relative"
+                        className="relative w-full max-w-[calc(100vw-2rem)] sm:max-w-none"
                     >
                         {/* Efecto Glow de fondo - Desactivado en Eco Mode */}
                         {!performanceMode && (
@@ -194,7 +194,7 @@ export function AIChatWidget() {
                         )}
 
                         <Card className={cn(
-                            "w-85 sm:w-[400px] shadow-3xl flex flex-col h-[580px] overflow-hidden rounded-2xl",
+                            "w-full sm:w-[400px] shadow-3xl flex flex-col h-[70vh] sm:h-[580px] overflow-hidden rounded-2xl",
                             performanceMode
                                 ? "bg-slate-900 border-slate-700 text-slate-100"
                                 : "border-slate-800 bg-slate-950/95 backdrop-blur-xl text-slate-100"

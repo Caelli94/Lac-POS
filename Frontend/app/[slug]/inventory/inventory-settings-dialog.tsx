@@ -77,7 +77,7 @@ export function InventorySettingsDialog({ organizationId, slug, initialSettings 
                     <Settings2 size={16} className="text-slate-500" />
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md bg-white rounded-[2rem] p-0 border-none shadow-2xl overflow-hidden">
+            <DialogContent className="w-[95vw] sm:max-w-md bg-white rounded-[2rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
                 <DialogHeader className="p-6 bg-slate-50 border-b border-slate-100">
                     <DialogTitle className="text-xl font-black uppercase tracking-tight text-slate-900">Configuración de Inventario</DialogTitle>
                     <DialogDescription className="text-xs font-medium text-slate-500">

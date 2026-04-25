@@ -157,7 +157,7 @@ export function CheckModal({ isOpen, onClose, orgId, onSuccess, defaultType, edi
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-3xl bg-white rounded-[2rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col">
+            <DialogContent className="w-[95vw] sm:max-w-3xl bg-white rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
                 <DialogHeader className="bg-slate-50 p-6 border-b border-slate-100 shrink-0 flex flex-row items-center justify-between space-y-0">
                     <DialogTitle className="text-xl font-black uppercase tracking-tight">
                         {editingCheck ? 'Editar Cheque' : 'Registrar Nuevo Cheque'}
@@ -176,7 +176,7 @@ export function CheckModal({ isOpen, onClose, orgId, onSuccess, defaultType, edi
                     )}
                 </DialogHeader>
 
-                <form onSubmit={handleSubmit} className="p-8 space-y-6 overflow-y-auto custom-scrollbar max-h-[85vh]">
+                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar min-h-0">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Selector de Tipo (Solo en creación) */}
                         {!editingCheck && (

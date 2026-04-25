@@ -636,7 +636,7 @@ export function SupplierTableManager({ initialSuppliers, initialPagination, cate
 
             {/* ADD/EDIT MODAL */}
             <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-                <DialogContent className="max-w-2xl bg-white rounded-[2rem] p-0 border-none shadow-2xl overflow-hidden h-[90vh] flex flex-col">
+                <DialogContent className="w-[95vw] sm:max-w-2xl bg-white rounded-[2rem] p-0 border-none shadow-2xl overflow-hidden h-[95vh] md:h-[90vh] flex flex-col transition-all">
                     <DialogHeader className="bg-slate-50 p-6 border-b border-slate-100 shrink-0">
                         <DialogTitle className="text-xl font-black uppercase tracking-tight">
                             {selectedSupplier ? 'Editar Proveedor' : 'Nuevo Proveedor'}
@@ -662,7 +662,7 @@ export function SupplierTableManager({ initialSuppliers, initialPagination, cate
 
             {/* DELETE CONFIRMATION */}
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-                <DialogContent className="max-w-[400px] bg-white rounded-[2rem] p-8 border-none shadow-2xl z-[100]">
+                <DialogContent className="w-[90vw] sm:max-w-[400px] bg-white rounded-[2rem] p-8 border-none shadow-2xl z-[100]">
                     <DialogHeader>
                         <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-center">¿Eliminar Proveedor?</DialogTitle>
                         <DialogDescription className="text-center text-slate-500">
@@ -688,7 +688,7 @@ export function SupplierTableManager({ initialSuppliers, initialPagination, cate
 
             {/* MASS DELETE DIALOG */}
             <Dialog open={isMassDeleteOpen} onOpenChange={setIsMassDeleteOpen}>
-                <DialogContent className="max-w-[400px] bg-white rounded-[2rem] p-8 border-none shadow-2xl z-[100]">
+                <DialogContent className="w-[90vw] sm:max-w-[400px] bg-white rounded-[2rem] p-8 border-none shadow-2xl z-[100]">
                     <DialogHeader>
                         <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-center">¿Eliminar Selección?</DialogTitle>
                     </DialogHeader>

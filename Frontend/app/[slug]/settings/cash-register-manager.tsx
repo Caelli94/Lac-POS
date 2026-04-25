@@ -213,14 +213,14 @@ export function CashRegisterManager({ registers: initialRegisters = [], branches
 
             {/* MODAL NUEVA CAJA */}
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogContent className="sm:max-w-[500px] rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl">
+                <DialogContent className="w-[95vw] sm:max-w-[500px] rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl max-h-[95vh] flex flex-col">
                     <DialogHeader className="bg-slate-50 p-6 border-b border-slate-100 shrink-0">
                         <DialogTitle className="text-xl font-black uppercase tracking-tight text-slate-800">
                             Nueva Caja
                         </DialogTitle>
                     </DialogHeader>
 
-                    <div className="p-6 flex flex-col gap-6 bg-white text-slate-900">
+                    <div className="p-6 flex flex-col gap-6 bg-white text-slate-900 overflow-y-auto">
                         <div className="space-y-2">
                             <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Nombre Identificativo</Label>
                             <Input
@@ -246,7 +246,7 @@ export function CashRegisterManager({ registers: initialRegisters = [], branches
                         </div>
                     </div>
 
-                    <DialogFooter className="p-6 bg-slate-50 border-t border-slate-100">
+                    <DialogFooter className="p-6 bg-slate-50 border-t border-slate-100 shrink-0 flex-row gap-3">
                         <Button
                             type="button"
                             variant="ghost"
@@ -268,14 +268,14 @@ export function CashRegisterManager({ registers: initialRegisters = [], branches
 
             {/* MODAL EDITAR CAJA */}
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                <DialogContent className="sm:max-w-[500px] rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl">
+                <DialogContent className="w-[95vw] sm:max-w-[500px] rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl max-h-[95vh] flex flex-col">
                     <DialogHeader className="bg-slate-50 p-6 border-b border-slate-100 shrink-0">
                         <DialogTitle className="text-xl font-black uppercase tracking-tight text-slate-800">
                             Editar Caja
                         </DialogTitle>
                     </DialogHeader>
 
-                    <div className="p-6 flex flex-col gap-6 bg-white text-slate-900">
+                    <div className="p-6 flex flex-col gap-6 bg-white text-slate-900 overflow-y-auto">
                         <div className="space-y-2">
                             <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Nombre Identificativo</Label>
                             <Input
@@ -300,7 +300,7 @@ export function CashRegisterManager({ registers: initialRegisters = [], branches
                         </div>
                     </div>
 
-                    <DialogFooter className="p-6 bg-slate-50 border-t border-slate-100">
+                    <DialogFooter className="p-6 bg-slate-50 border-t border-slate-100 shrink-0 flex-row gap-3">
                         <Button
                             type="button"
                             variant="ghost"
@@ -322,7 +322,7 @@ export function CashRegisterManager({ registers: initialRegisters = [], branches
 
             {/* ALERTA ELIMINAR */}
             <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-                <AlertDialogContent className="rounded-[3rem] border-none p-0 overflow-hidden shadow-2xl">
+                <AlertDialogContent className="w-[95vw] sm:max-w-[440px] rounded-[3rem] border-none p-0 overflow-hidden shadow-2xl">
                     <div className="bg-red-50 p-10 flex flex-col items-center text-center">
                         <div className="w-20 h-20 bg-red-100 rounded-[2rem] flex items-center justify-center text-red-600 mb-6 shadow-inner animate-pulse">
                             <Ban size={32} />

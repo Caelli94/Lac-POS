@@ -928,62 +928,49 @@ export function TeamManager({ orgId, currentUserId, userRole, permissions, featu
 
                 {/* ROLE DIALOG (Permissions Matrix) */}
                 <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
-                    <DialogContent showCloseButton={false} className="max-w-[70rem] h-[90vh] bg-white rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col focus:outline-none focus:ring-0">
+                    <DialogContent className="w-[95vw] sm:max-w-6xl bg-white rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
                         <DialogHeader className="bg-slate-50 p-8 border-b border-slate-100 shrink-0">
-                            <div className="flex justify-between items-center">
-                                <div>
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                                <div className="space-y-1">
                                     <DialogTitle className="text-2xl font-black uppercase tracking-tight text-slate-900 flex items-center gap-3">
-                                        <ShieldCheck className="text-indigo-600" size={32} />
-                                        {editingRole?._id ? 'Editar Rol y Permisos' : 'Configurar Nuevo Rol'}
+                                        <ShieldCheck className="text-blue-600" size={24} />
+                                        {editingRole?._id ? 'Editar Rol' : 'Nuevo Rol Personalizado'}
                                     </DialogTitle>
-                                    <p className="text-slate-400 text-xs font-bold uppercase tracking-wide mt-1">Matriz de Acceso Granular por Módulo</p>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Configura los permisos detallados por módulo</p>
                                 </div>
-                                <Button variant="ghost" size="icon" onClick={() => setIsRoleDialogOpen(false)} className="rounded-full hover:bg-white border border-transparent hover:border-slate-100 h-10 w-10 flex items-center justify-center">
-                                    <X size={24} className="text-slate-400" />
-                                </Button>
+
+                                <div className="flex items-center gap-4 bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
+                                    <div className="space-y-1 pr-4 border-r border-slate-100">
+                                        <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest block ml-1">Nombre del Rol</Label>
+                                        <Input
+                                            value={editingRole?.name || ''}
+                                            onChange={e => setEditingRole(prev => prev ? ({ ...prev, name: e.target.value }) : null)}
+                                            placeholder="Ej. Vendedor Senior"
+                                            className="h-10 border-none bg-slate-50 rounded-xl font-bold uppercase text-xs focus-visible:ring-0 w-[200px]"
+                                            disabled={editingRole?.name === 'Admin'}
+                                        />
+                                    </div>
+                                    <div className="flex items-center gap-3 pl-2">
+                                        <div className="flex flex-col items-end">
+                                            <span className="text-[10px] font-black uppercase text-slate-700 leading-none">Poder Global</span>
+                                            <span className="text-[8px] font-bold uppercase text-slate-400 tracking-widest mt-1">Super Admin</span>
+                                        </div>
+                                        <Switch
+                                            checked={editingRole?.allowSuperAdmin || false}
+                                            onCheckedChange={(checked) => setEditingRole(prev => prev ? ({ ...prev, allowSuperAdmin: !!checked }) : null)}
+                                            className="data-[state=checked]:bg-blue-600"
+                                            disabled={editingRole?.name === 'Admin'}
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </DialogHeader>
 
-                        <ScrollArea className="flex-1 w-full overflow-y-auto">
-                            <div className="p-8">
+                        <ScrollArea className="flex-1 min-h-0 bg-white">
+                            <div className="p-8 space-y-8">
                                 <div className="space-y-8 max-w-5xl mx-auto">
-                                    <div className="flex flex-col md:flex-row gap-6 bg-slate-50/50 p-6 rounded-3xl border border-dashed border-slate-200">
-                                        <div className="flex-1 space-y-3">
-                                            <Label className="text-xs font-black uppercase text-slate-500 tracking-widest pl-1">Nombre del Rol</Label>
-                                            <Input
-                                                value={editingRole?.name || ''}
-                                                onChange={e => setEditingRole(prev => prev ? ({ ...prev, name: e.target.value }) : null)}
-                                                placeholder="Ej. Encargado de Salón, Vendedor Semi-Senior..."
-                                                className="rounded-2xl border-slate-200 h-14 font-black uppercase text-lg tracking-tight bg-white focus:ring-indigo-500/20 shadow-sm"
-                                            />
-                                        </div>
-                                        <div className="flex items-center gap-4 bg-white px-6 py-4 rounded-xl border border-slate-200 shadow-sm self-end h-auto min-h-[56px]">
-                                            {isAuditManager ? (
-                                                <>
-                                                    <div className="flex flex-col items-end">
-                                                        <span className="text-[10px] font-black uppercase text-red-600 leading-none flex items-center gap-1.5">
-                                                            <ShieldAlert size={12} className="text-red-500" />
-                                                            Acceso Super Admin
-                                                        </span>
-                                                        <span className="text-[8px] font-bold uppercase text-red-400 tracking-tighter mt-1">Autorizar Auditoría</span>
-                                                    </div>
-                                                    <Checkbox
-                                                        checked={editingRole?.allowSuperAdmin || false}
-                                                        onCheckedChange={(checked: boolean) => setEditingRole(prev => prev ? ({ ...prev, allowSuperAdmin: checked }) : null)}
-                                                        className="w-5 h-5 border-red-200 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
-                                                    />
-                                                </>
-                                            ) : (
-                                                <div className="flex flex-col items-end opacity-50 cursor-not-allowed">
-                                                    <span className="text-[10px] font-black uppercase text-rose-500 leading-none flex items-center gap-1.5">
-                                                        <Shield size={10} />
-                                                        Acceso Restringido
-                                                    </span>
-                                                </div>
-                                            )}
+                                    {/* CABECERA INTERNA DE OPCIONES (Opcional, ya tenemos en el header) */}
 
-                                        </div>
-                                    </div>
 
                                     {/* COMISIONES POR VENTA */}
                                     <div className="flex flex-col gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
@@ -1208,15 +1195,15 @@ export function TeamManager({ orgId, currentUserId, userRole, permissions, featu
 
                 {/* ADD/EDIT MIEMBRO DIALOG */}
                 <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                    <DialogContent className="max-w-xl bg-white rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-                        <DialogHeader className="bg-slate-50 p-8 border-b border-slate-100">
+                    <DialogContent className="w-[95vw] sm:max-w-xl bg-white rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 max-h-[95vh] flex flex-col">
+                        <DialogHeader className="bg-slate-50 p-8 border-b border-slate-100 shrink-0">
                             <DialogTitle className="text-2xl font-black uppercase tracking-tight text-slate-900 flex items-center gap-3">
                                 <UserPlus className="text-slate-900" size={24} />
                                 {editingId ? 'Editar Miembro' : 'Nuevo Miembro'}
                             </DialogTitle>
                         </DialogHeader>
 
-                        <div className="p-8 space-y-6">
+                        <div className="flex-1 overflow-y-auto p-8 space-y-6">
                             <div className="grid grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <Label className="text-xs font-black uppercase text-slate-400 tracking-widest ml-1">Nombre Completo</Label>
@@ -1340,7 +1327,7 @@ export function TeamManager({ orgId, currentUserId, userRole, permissions, featu
 
                 {/* DELETE ALERT DIALOG */}
                 < AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-                    <AlertDialogContent className="max-w-[420px] bg-white rounded-[3rem] p-10 border-none shadow-2xl animate-in fade-in zoom-in duration-300">
+                    <AlertDialogContent className="w-[95vw] sm:max-w-[420px] bg-white rounded-[3rem] p-10 border-none shadow-2xl animate-in fade-in zoom-in duration-300">
                         <AlertDialogHeader>
                             <AlertDialogTitle className="text-2xl font-black uppercase tracking-tighter text-center text-slate-900">¿Eliminar Usuario?</AlertDialogTitle>
                         </AlertDialogHeader>
@@ -1363,8 +1350,8 @@ export function TeamManager({ orgId, currentUserId, userRole, permissions, featu
 
                 {/* COMMISSIONS MODAL */}
                 <Dialog open={isCommissionModalOpen} onOpenChange={setIsCommissionModalOpen}>
-                    <DialogContent className="max-w-3xl bg-white rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden">
-                        <DialogHeader className="bg-slate-50 p-6 border-b border-slate-100">
+                    <DialogContent className="w-[95vw] sm:max-w-3xl bg-white rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden max-h-[95vh] flex flex-col">
+                        <DialogHeader className="bg-slate-50 p-6 border-b border-slate-100 shrink-0">
                             <DialogTitle className="text-xl font-black uppercase tracking-tight text-slate-900 flex items-center gap-3">
                                 <Percent className="text-emerald-500" size={24} />
                                 Historial de Comisiones
@@ -1373,7 +1360,7 @@ export function TeamManager({ orgId, currentUserId, userRole, permissions, featu
                                 {selectedCommissionUser?.name}
                             </p>
                         </DialogHeader>
-                        <div className="p-6 h-[60vh] flex flex-col">
+                        <div className="p-6 flex-1 flex flex-col min-h-0">
                             {/* Summary Cards */}
                             <div className="grid grid-cols-2 gap-4 mb-6 shrink-0">
                                 <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl flex items-center justify-between shadow-sm">

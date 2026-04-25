@@ -355,13 +355,13 @@ export function ConfigTab({ org }: ConfigTabProps) {
                                         <Plus className="mr-2 h-4 w-4" /> Añadir Profesional
                                     </Button>
                                 </DialogTrigger>
-                                <DialogContent className="max-w-3xl bg-white rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col">
-                                    <DialogHeader className="bg-slate-50 p-8 border-b border-slate-100">
+                                <DialogContent className="w-[95vw] sm:max-w-3xl bg-white rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
+                                    <DialogHeader className="bg-slate-50 p-8 border-b border-slate-100 shrink-0">
                                         <DialogTitle className="text-xl font-black uppercase">Nuevo Profesional</DialogTitle>
                                         <p className="text-xs font-medium text-slate-500">Completa los datos y define su agenda inicial.</p>
                                     </DialogHeader>
-                                    
-                                    <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8 max-h-[60vh] overflow-y-auto custom-scrollbar">
+
+                                    <div className="flex-1 overflow-y-auto p-8 grid grid-cols-1 md:grid-cols-2 gap-8 custom-scrollbar min-h-0">
                                         <div className="space-y-6">
                                             <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-600">Información General</h4>
                                             <div className="space-y-4">
@@ -454,7 +454,7 @@ export function ConfigTab({ org }: ConfigTabProps) {
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="p-8 border-t border-slate-100 bg-slate-50/50">
+                                    <div className="p-8 border-t border-slate-100 bg-slate-50/50 shrink-0">
                                         <Button 
                                             onClick={handleAddProfessional} 
                                             disabled={loading}
@@ -660,8 +660,8 @@ export function ConfigTab({ org }: ConfigTabProps) {
 
             {/* DIALOG PARA EDITAR PROFESIONAL COMPLETO */}
             <Dialog open={isEditProfOpen} onOpenChange={setIsEditProfOpen}>
-                <DialogContent className="max-w-3xl bg-white rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col">
-                    <DialogHeader className="bg-slate-50 p-8 border-b border-slate-100">
+                <DialogContent className="w-[95vw] sm:max-w-3xl bg-white rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
+                    <DialogHeader className="bg-slate-50 p-8 border-b border-slate-100 shrink-0">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
                                 <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg" style={{ backgroundColor: editingProf?.color }}>
@@ -675,7 +675,7 @@ export function ConfigTab({ org }: ConfigTabProps) {
                         </div>
                     </DialogHeader>
                     
-                    <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                    <div className="flex-1 overflow-y-auto p-8 grid grid-cols-1 md:grid-cols-2 gap-8 custom-scrollbar min-h-0">
                         {/* DATOS BÁSICOS */}
                         <div className="space-y-6">
                             <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-600">Información General</h4>
@@ -782,7 +782,7 @@ export function ConfigTab({ org }: ConfigTabProps) {
                         </div>
                     </div>
 
-                    <div className="p-8 border-t border-slate-100 bg-slate-50/50 flex gap-4">
+                    <div className="p-8 border-t border-slate-100 bg-slate-50/50 flex gap-4 shrink-0">
                         <Button variant="outline" onClick={() => setIsEditProfOpen(false)} className="flex-1 h-12 rounded-2xl font-bold uppercase text-[10px]">Cancelar</Button>
                         <Button 
                             onClick={handleUpdateProfessional}
@@ -797,7 +797,7 @@ export function ConfigTab({ org }: ConfigTabProps) {
 
             {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN */}
             <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
-                <DialogContent className="max-w-[400px] bg-white rounded-[2.5rem] p-8 border-none shadow-2xl z-[150]">
+                <DialogContent className="w-[95vw] sm:max-w-[400px] bg-white rounded-[2.5rem] p-8 border-none shadow-2xl z-[150]">
                     <DialogHeader>
                         <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-center">¿Eliminar Profesional?</DialogTitle>
                     </DialogHeader>

@@ -927,7 +927,7 @@ export default function CashRegisterView({
 
             <Dialog open={!!activeBox} onOpenChange={() => setActiveBox(null)}>
                 <DialogContent className={cn(
-                    "rounded-[24px] md:rounded-[32px] overflow-hidden p-0 border-none shadow-2xl w-[95vw] sm:max-w-lg max-h-[90vh] flex flex-col transition-all duration-300",
+                    "rounded-[24px] md:rounded-[32px] overflow-hidden p-0 border-none shadow-2xl w-[95vw] sm:max-w-lg max-h-[95vh] flex flex-col transition-all duration-300",
                     activeBox === 'abrir' && "sm:max-w-4xl",
                     activeBox === 'manual' && "sm:max-w-lg bg-white border-none p-0 shadow-2xl flex flex-col rounded-[2rem]"
                 )}>
@@ -1310,18 +1310,18 @@ export default function CashRegisterView({
             </Dialog>
 
             {/* DETALLE OPERACIÓN (OJITO) */}
-            {selectedMovement && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden relative">
-                        <button onClick={() => setSelectedMovement(null)} className="absolute right-6 top-6 text-slate-400 hover:text-slate-600"><X size={24} /></button>
-                        <div className="p-8">
-                            <h3 className="font-black text-slate-900 uppercase text-xl mb-4 italic tracking-tighter">Detalle de Operación</h3>
-                            {selectedMovement.type === 'Venta' ? (
-                                <>
-                                    <div className="mb-4 text-sm text-slate-600 space-y-1 italic border-b pb-4">
-                                        <p><strong>Fecha:</strong> {format(selectedMovement.date, "dd/MM/yyyy HH:mm")}</p>
-                                        <p><strong>Cliente:</strong> {selectedMovement.customer}</p>
-                                    </div>
+            <Dialog open={!!selectedMovement} onOpenChange={() => setSelectedMovement(null)}>
+                <DialogContent className="w-[95vw] sm:max-w-lg bg-white rounded-3xl shadow-2xl p-0 border-none overflow-hidden font-sans max-h-[95vh] flex flex-col">
+                    <DialogHeader className="sr-only"><DialogTitle>Detalle de Operación</DialogTitle></DialogHeader>
+                    <div className="p-6 md:p-8 overflow-y-auto">
+                        <h3 className="font-black text-slate-900 uppercase text-xl mb-4 italic tracking-tighter">Detalle de Operación</h3>
+                        {selectedMovement && (selectedMovement.type === 'Venta' ? (
+                            <>
+                                <div className="mb-4 text-sm text-slate-600 space-y-1 italic border-b pb-4">
+                                    <p><strong>Fecha:</strong> {format(selectedMovement.date, "dd/MM/yyyy HH:mm")}</p>
+                                    <p><strong>Cliente:</strong> {selectedMovement.customer}</p>
+                                </div>
+                                <div className="overflow-x-auto">
                                     <table className="w-full text-sm">
                                         <thead className="bg-slate-50 text-slate-500 text-[10px] uppercase font-bold tracking-widest">
                                             <tr><th className="px-2 py-3 text-left">Producto</th><th className="px-2 py-3 text-right">Cant.</th><th className="px-2 py-3 text-right">Subtotal</th></tr>
@@ -1348,305 +1348,100 @@ export default function CashRegisterView({
                                             <tr><td className="px-2 py-4 uppercase text-slate-400 text-xs">Total</td><td></td><td className="px-2 py-4 text-right text-indigo-600 text-2xl">{formatMoney(selectedMovement.amount)}</td></tr>
                                         </tfoot>
                                     </table>
-                                    <Button onClick={() => handlePrint(selectedMovement)} className="w-full mt-6 bg-slate-900 text-white font-black h-14 rounded-2xl flex items-center justify-center gap-2 shadow-xl hover:bg-black transition-all">
-                                        <Printer size={20} /> Imprimir Ticket
-                                    </Button>
-                                </>
-                            ) : (
-                                <div className="p-10 bg-slate-50 rounded-[32px] text-center border-2 border-dashed border-slate-200">
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Movimiento Manual</p>
-                                    <p className="text-2xl italic font-medium mb-6 text-slate-800">"{selectedMovement.detail}"</p>
-                                    <div className="bg-indigo-50 inline-block px-8 py-4 rounded-3xl"><p className="text-5xl font-black text-indigo-600">{formatMoney(selectedMovement.amount)}</p></div>
                                 </div>
-                            )}
-                        </div>
+                                <Button onClick={() => handlePrint(selectedMovement)} className="w-full mt-6 bg-slate-900 text-white font-black h-14 rounded-2xl flex items-center justify-center gap-2 shadow-xl hover:bg-black transition-all">
+                                    <Printer size={20} /> Imprimir Ticket
+                                </Button>
+                            </>
+                        ) : (
+                            <div className="p-6 md:p-10 bg-slate-50 rounded-[32px] text-center border-2 border-dashed border-slate-200">
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Movimiento Manual</p>
+                                <p className="text-xl md:text-2xl italic font-medium mb-6 text-slate-800">"{selectedMovement.detail}"</p>
+                                <div className="bg-indigo-50 inline-block px-6 md:px-8 py-4 rounded-3xl"><p className="text-3xl md:text-5xl font-black text-indigo-600">{formatMoney(selectedMovement.amount)}</p></div>
+                            </div>
+                        ))}
                     </div>
-                </div>
-            )}
+                </DialogContent>
+            </Dialog>
 
             {/* MODALES DE ANULACIÓN Y ÉXITO */}
-            {saleToCancel && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-8 text-center text-slate-900">
-                        <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4"><AlertTriangle className="h-8 w-8 text-red-600" /></div>
-                        <h3 className="text-xl font-bold mb-2 uppercase tracking-tighter">¿Anular esta venta?</h3>
-                        <p className="text-sm text-slate-500 mb-8 italic">El stock regresará al inventario automáticamente. Esta acción no se puede deshacer.</p>
-                        <div className="flex gap-4">
-                            <button onClick={() => setSaleToCancel(null)} className="px-6 py-3 border border-slate-200 rounded-2xl w-full font-bold">Cerrar</button>
-                            <button onClick={handleCancel} disabled={isPending} className="px-6 py-3 bg-red-600 text-white font-bold rounded-2xl w-full flex justify-center items-center">
-                                {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sí, Anular'}
-                            </button>
-                        </div>
+            <Dialog open={!!saleToCancel} onOpenChange={() => setSaleToCancel(null)}>
+                <DialogContent className="w-[90vw] sm:max-w-sm bg-white rounded-3xl shadow-2xl p-8 text-center text-slate-900 border-none">
+                    <DialogHeader className="sr-only"><DialogTitle>Anular Venta</DialogTitle></DialogHeader>
+                    <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4"><AlertTriangle className="h-8 w-8 text-red-600" /></div>
+                    <h3 className="text-xl font-bold mb-2 uppercase tracking-tighter">¿Anular esta venta?</h3>
+                    <p className="text-sm text-slate-500 mb-8 italic">El stock regresará al inventario automáticamente. Esta acción no se puede deshacer.</p>
+                    <div className="flex gap-4">
+                        <Button variant="outline" onClick={() => setSaleToCancel(null)} className="rounded-2xl w-full h-12 font-bold">Cerrar</Button>
+                        <Button onClick={handleCancel} disabled={isPending} className="bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl w-full h-12 flex justify-center items-center">
+                            {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sí, Anular'}
+                        </Button>
                     </div>
-                </div>
-            )}
+                </DialogContent>
+            </Dialog>
 
-            {movementToVoid && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-8 text-center text-slate-900">
-                        <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4"><AlertTriangle className="h-8 w-8 text-red-600" /></div>
-                        <h3 className="text-xl font-bold mb-2 uppercase tracking-tighter">¿Anular Movimiento?</h3>
-                        <p className="text-sm text-slate-500 mb-8 italic">Se revertirá el saldo de la caja. Esta acción no se puede deshacer.</p>
-                        <div className="flex gap-4">
-                            <button onClick={() => setMovementToVoid(null)} className="px-6 py-3 border border-slate-200 rounded-2xl w-full font-bold">Cerrar</button>
-                            <button onClick={async () => {
-                                setVoiding(true);
-                                const res = await voidCashMovement(movementToVoid._id || movementToVoid.id, slug);
-                                setVoiding(false);
-                                if (res.error) {
-                                    toast.error(res.error);
-                                } else {
-                                    toast.success("Movimiento anulado");
-                                    setMovementToVoid(null);
-                                }
-                            }} disabled={voiding} className="px-6 py-3 bg-red-600 text-white font-bold rounded-2xl w-full flex justify-center items-center">
-                                {voiding ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sí, Anular'}
-                            </button>
-                        </div>
+            <Dialog open={!!movementToVoid} onOpenChange={() => setMovementToVoid(null)}>
+                <DialogContent className="w-[90vw] sm:max-w-sm bg-white rounded-3xl shadow-2xl p-8 text-center text-slate-900 border-none">
+                    <DialogHeader className="sr-only"><DialogTitle>Anular Movimiento</DialogTitle></DialogHeader>
+                    <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4"><AlertTriangle className="h-8 w-8 text-red-600" /></div>
+                    <h3 className="text-xl font-bold mb-2 uppercase tracking-tighter">¿Anular Movimiento?</h3>
+                    <p className="text-sm text-slate-500 mb-8 italic">Se revertirá el saldo de la caja. Esta acción no se puede deshacer.</p>
+                    <div className="flex gap-4">
+                        <Button variant="outline" onClick={() => setMovementToVoid(null)} className="rounded-2xl w-full h-12 font-bold">Cerrar</Button>
+                        <Button onClick={async () => {
+                            setVoiding(true);
+                            const res = await voidCashMovement(movementToVoid._id || movementToVoid.id, slug);
+                            setVoiding(false);
+                            if (res.error) {
+                                toast.error(res.error);
+                            } else {
+                                toast.success("Movimiento anulado");
+                                setMovementToVoid(null);
+                            }
+                        }} disabled={voiding} className="bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl w-full h-12 flex justify-center items-center">
+                            {voiding ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sí, Anular'}
+                        </Button>
                     </div>
-                </div>
-            )}
+                </DialogContent>
+            </Dialog>
 
-            {showSuccessModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-sm overflow-hidden p-10 text-center text-slate-900 border-none">
-                        <div className="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6"><CheckCircle2 className="h-12 w-12 text-green-600" /></div>
-                        <h3 className="text-2xl font-black mb-2 tracking-tighter uppercase">¡Venta Anulada!</h3>
-                        <p className="text-sm text-slate-500 mb-10 italic">La operación se revirtió y el stock fue actualizado correctamente.</p>
-                        <button onClick={() => setShowSuccessModal(false)} className="px-10 py-4 bg-slate-900 text-white font-black rounded-3xl w-full shadow-xl">Entendido</button>
-                    </div>
-                </div>
-            )}
-            {selectedSale && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-7xl overflow-hidden">
-                        <div className="bg-slate-50 px-6 py-4 border-b flex justify-between items-center">
-                            <h3 className="font-semibold text-lg">Detalle de Venta (Historial)</h3>
-                            <button onClick={() => setSelectedSale(null)} className="text-slate-400 hover:text-slate-600 text-xl">✕</button>
-                        </div>
-                        <div className="p-6 max-h-[60vh] overflow-y-auto">
-                            <div className="mb-4 text-sm text-slate-600 space-y-1">
-                                <p><strong>Fecha:</strong> {new Date(selectedSale.date || selectedSale.created_at).toLocaleString()}</p>
-                                <p><strong>Cliente:</strong> {selectedSale.customers?.name || 'Cliente Final'}</p>
-                                <p><strong>Comprobante:</strong> {selectedSale.invoice_letter === 'A' ? 'Factura A' : selectedSale.invoice_letter === 'B' ? 'Factura B' : 'Ticket'}</p>
-                            </div>
-                            <table className="w-full text-sm">
-                                <thead className="bg-slate-50 text-slate-500 text-xs uppercase font-medium">
-                                    <tr>
-                                        <th className="px-4 py-3 text-left w-1/4">Producto</th>
-                                        <th className="px-4 py-3 text-left w-1/5">Proveedor</th>
-                                        <th className="px-4 py-3 text-left w-1/5">Rubros</th>
-                                        <th className="px-4 py-3 text-center">Cant.</th>
-                                        <th className="px-4 py-3 text-right">Unitario</th>
-                                        <th className="px-4 py-3 text-right">Subtotal</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                    {selectedSale.sale_items?.map((item: any, idx: number) => (
-                                        <tr key={idx}>
-                                            <td className="px-4 py-3 text-slate-700 font-medium align-top">
-                                                <div className="flex flex-col">
-                                                    <span className="font-bold">{item.product_name}</span>
-                                                    {(item.variant_name || item.product_variant_name) && (
-                                                        <span className="text-[10px] text-indigo-600 font-black uppercase mt-0.5">
-                                                            {item.variant_name || item.product_variant_name}
-                                                        </span>
-                                                    )}
-                                                    <span className="text-[10px] text-slate-400 font-mono">{item.product_details?.sku || ''}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-3 align-top text-xs text-slate-600">{item.product_details?.supplier?.name || '---'}</td>
-                                            <td className="px-4 py-3 align-top">
-                                                <div className="flex flex-wrap gap-1">
-                                                    {item.product_details?.category_ids?.map((c: any) => (
-                                                        <span key={c._id} className="text-[9px] bg-slate-100 text-slate-500 px-1 rounded border border-slate-200">{c.name}</span>
-                                                    ))}
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-3 text-center text-slate-400 align-top">x{item.quantity}</td>
-                                            <td className="px-4 py-3 text-right text-slate-500 align-top">{formatMoney(item.unit_price)}</td>
-                                            <td className="px-4 py-3 text-right font-bold text-slate-700 align-top">{formatMoney(item.unit_price * item.quantity)}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                                <tfoot className="border-t bg-slate-50/50">
-                                    <tr>
-                                        <td colSpan={5} className="px-4 py-2 text-right text-xs font-bold text-slate-500 uppercase">Subtotal</td>
-                                        <td className="px-4 py-2 text-right text-slate-700 font-bold">
-                                            {formatMoney(selectedSale.sale_items?.reduce((acc: number, item: any) => acc + (item.unit_price * item.quantity), 0) || 0)}
-                                        </td>
-                                    </tr>
-                                    {selectedSale.discount_general && (() => {
-                                        const eligible = selectedSale.sale_items?.reduce((acc: number, item: any) => {
-                                            if (item.exclude_from_general_discount) return acc;
-                                            return acc + (item.unit_price * item.quantity);
-                                        }, 0) || 0;
-                                        const adj = selectedSale.discount_general.type === 'PERCENT'
-                                            ? eligible * (selectedSale.discount_general.value / 100)
-                                            : selectedSale.discount_general.value;
+            <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
+                <DialogContent className="w-[90vw] sm:max-w-sm bg-white rounded-[40px] shadow-2xl p-10 text-center text-slate-900 border-none">
+                    <DialogHeader className="sr-only"><DialogTitle>Éxito</DialogTitle></DialogHeader>
+                    <div className="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6"><CheckCircle2 className="h-12 w-12 text-green-600" /></div>
+                    <h3 className="text-2xl font-black mb-2 tracking-tighter uppercase">¡Venta Anulada!</h3>
+                    <p className="text-sm text-slate-500 mb-10 italic">La operación se revirtió y el stock fue actualizado correctamente.</p>
+                    <Button onClick={() => setShowSuccessModal(false)} className="bg-slate-900 hover:bg-black text-white font-black rounded-3xl w-full h-14 shadow-xl">Entendido</Button>
+                </DialogContent>
+            </Dialog>
 
-                                        return (
-                                            <tr>
-                                                <td colSpan={5} className={`px-4 py-2 text-right text-xs font-bold uppercase ${adj > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
-                                                    {adj > 0 ? 'Recargo' : 'Descuento General'} {selectedSale.discount_general.type === 'PERCENT' ? `(${Math.abs(selectedSale.discount_general.value)}%)` : ''}
-                                                </td>
-                                                <td className={`px-4 py-2 text-right font-bold ${adj > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
-                                                    {adj > 0 ? '+' : ''}{formatMoney(adj)}
-                                                </td>
-                                            </tr>
-                                        )
-                                    })()}
-                                    {selectedSale.surcharge_general && (() => {
-                                        const eligible = selectedSale.sale_items?.reduce((acc: number, item: any) => acc + (item.unit_price * item.quantity), 0) || 0;
-                                        const surcharge = selectedSale.surcharge_general.applied_amount
-                                            || (selectedSale.surcharge_general.value
-                                                ? eligible * (selectedSale.surcharge_general.value / 100)
-                                                : 0);
-
-                                        return (
-                                            <tr>
-                                                <td colSpan={5} className={`px-4 py-2 text-right text-xs font-bold uppercase ${surcharge > 0 ? 'text-blue-600' : 'text-emerald-600'}`}>
-                                                    {surcharge > 0 ? 'Recargo Cliente' : 'Descuento Cliente'} {selectedSale.surcharge_general.type === 'PERCENT' ? `(${Math.abs(selectedSale.surcharge_general.value)}%)` : ''}
-                                                </td>
-                                                <td className={`px-4 py-2 text-right font-bold ${surcharge > 0 ? 'text-blue-600' : 'text-emerald-600'}`}>
-                                                    {surcharge > 0 ? '+' : ''}{formatMoney(surcharge)}
-                                                </td>
-                                            </tr>
-                                        )
-                                    })()}
-                                    {selectedSale.manual_tax_added && (() => {
-                                        const { vat } = (selectedSale.items || []).reduce((acc: any, item: any) => {
-                                            const taxRate = item.tax_rate ?? 0;
-                                            const gross = item.unit_price;
-                                            const net = gross / (1 + taxRate / 100);
-                                            return { vat: acc.vat + ((gross - net) * item.quantity) }
-                                        }, { vat: 0 });
-
-                                        if (vat < 0.01) return null;
-
-                                        return (
-                                            <tr>
-                                                <td colSpan={5} className="px-4 py-2 text-right text-xs font-bold text-blue-600 uppercase">IVA Agregado</td>
-                                                <td className="px-4 py-2 text-right text-blue-600 font-bold">
-                                                    +{formatMoney(vat)}
-                                                </td>
-                                            </tr>
-                                        )
-                                    })()}
-                                    {selectedSale.rounding_difference !== 0 && (
-                                        <tr>
-                                            <td colSpan={5} className="px-4 py-2 text-right text-xs font-bold text-slate-500 uppercase">Redondeo</td>
-                                            <td className="px-4 py-2 text-right text-slate-700 font-bold">
-                                                {selectedSale.rounding_difference > 0 ? '+' : ''}{formatMoney(selectedSale.rounding_difference || 0)}
-                                            </td>
-                                        </tr>
-                                    )}
-                                    {selectedSale.invoice_letter === 'A' && selectedSale.fiscal_data && (
-                                        <>
-                                            <tr className="border-t border-slate-100">
-                                                <td colSpan={5} className="px-4 py-1 text-right text-xs font-bold text-purple-600 uppercase">Neto Gravado (21%)</td>
-                                                <td className="px-4 py-1 text-right text-purple-600 font-medium">{formatMoney(selectedSale.fiscal_data.net_amount)}</td>
-                                            </tr>
-                                            <tr>
-                                                <td colSpan={5} className="px-4 py-1 text-right text-xs font-bold text-purple-600 uppercase">IVA (21%)</td>
-                                                <td className="px-4 py-1 text-right text-purple-600 font-medium">{formatMoney(selectedSale.fiscal_data.vat_amount)}</td>
-                                            </tr>
-                                        </>
-                                    )}
-                                    <tr className="border-t border-slate-200">
-                                        <td colSpan={5} className="px-4 py-3 text-right text-sm font-black text-slate-900 uppercase">Total Final</td>
-                                        <td className="px-4 py-3 text-right text-indigo-600 text-xl font-black">{formatMoney(selectedSale.total_amount)}</td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-
-                            <div className="mt-6 border-t pt-6">
-                                <h4 className="text-xs font-black uppercase text-slate-500 mb-3">Métodos de Pago</h4>
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                    {selectedSale.payments?.map((p: any, idx: number) => {
-                                        const map: any = {
-                                            'cash': { label: 'Efectivo', icon: Banknote, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                                            'credit_card': { label: 'Crédito', icon: CreditCard, color: 'text-purple-600', bg: 'bg-purple-50' },
-                                            'debit_card': { label: 'Débito', icon: CreditCard, color: 'text-pink-600', bg: 'bg-pink-50' },
-                                            'transfer': { label: 'Transferencia', icon: ArrowRightLeft, color: 'text-blue-600', bg: 'bg-blue-50' },
-                                            'check': { label: 'Cheque', icon: Banknote, color: 'text-orange-600', bg: 'bg-orange-50' },
-                                            'ACCOUNT': { label: 'Cta. Cte.', icon: Wallet, color: 'text-slate-600', bg: 'bg-slate-100' }
-                                        };
-                                        const info = map[p.method] || { label: p.method, icon: Wallet, color: 'text-slate-600', bg: 'bg-slate-50' };
-                                        const Icon = info.icon;
-                                        if (p.method === 'card') { info.label = 'Tarjeta'; info.color = 'text-purple-600'; }
-                                        return (
-                                            <div key={idx} className={`flex items-center gap-3 p-3 rounded-xl border border-slate-100 ${info.bg}`}>
-                                                <Icon className={`w-5 h-5 ${info.color}`} />
-                                                <div>
-                                                    <p className={`text-[10px] font-bold uppercase ${info.color} opacity-80`}>{info.label}</p>
-                                                    <p className="font-bold text-slate-900">{formatMoney(p.amount)}</p>
-                                                </div>
-                                            </div>
-                                        )
-                                    })}
+            <Dialog open={!!selectedSale} onOpenChange={() => setSelectedSale(null)}>
+                <DialogContent className="w-[95vw] sm:max-w-5xl bg-white rounded-xl shadow-2xl p-0 border-none overflow-hidden font-sans max-h-[95vh] flex flex-col">
+                    <DialogHeader className="bg-slate-50 px-6 py-4 border-b flex justify-between items-center shrink-0">
+                        <DialogTitle className="font-semibold text-lg">Detalle de Venta (Historial)</DialogTitle>
+                    </DialogHeader>
+                    <div className="p-4 md:p-6 overflow-y-auto">
+                        {selectedSale && (
+                            <>
+                                <div className="mb-4 text-sm text-slate-600 space-y-1">
+                                    <p><strong>Fecha:</strong> {new Date(selectedSale.date || selectedSale.created_at).toLocaleString()}</p>
+                                    <p><strong>Cliente:</strong> {selectedSale.customers?.name || 'Cliente Final'}</p>
+                                    <p><strong>Comprobante:</strong> {selectedSale.invoice_letter === 'A' ? 'Factura A' : selectedSale.invoice_letter === 'B' ? 'Factura B' : 'Ticket'}</p>
                                 </div>
-                            </div>
-                            <Button onClick={() => handlePrint(selectedSale)} className="w-full mt-6 bg-slate-900 text-white font-bold h-12 rounded-xl flex items-center justify-center gap-2">
-                                <Printer size={18} /> Reimprimir Ticket
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {selectedMovement && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-7xl overflow-hidden">
-                        <div className="bg-slate-50 px-6 py-4 border-b flex justify-between items-center">
-                            <h3 className="font-semibold text-lg">Detalle de Movimiento</h3>
-                            <button onClick={() => setSelectedMovement(null)} className="text-slate-400 hover:text-slate-600 text-xl">✕</button>
-                        </div>
-                        <div className="p-6 max-h-[60vh] overflow-y-auto">
-                            {!selectedMovement.items || selectedMovement.items.length === 0 ? (
-                                <div className="text-center py-10 space-y-4">
-                                    {selectedMovement.status === 'cancelled' && (
-                                        <div className="w-full bg-red-50 border-2 border-dashed border-red-200 text-red-500 font-black text-center py-4 mb-6 rounded-xl uppercase tracking-[0.2em] text-sm">
-                                            Anulado / Cancelado
-                                        </div>
-                                    )}
-                                    <div className="text-slate-500 font-mono text-sm uppercase">{format(selectedMovement.date, "dd/MM/yyyy HH:mm")}</div>
-                                    <h2 className="text-3xl font-black text-slate-900">{selectedMovement.detail || 'Sin descripción'}</h2>
-
-                                    <div className="inline-block px-4 py-2 bg-slate-100 rounded-xl">
-                                        <p className={`text-xl font-bold ${selectedMovement.isEgreso ? 'text-red-600' : 'text-emerald-600'}`}>{selectedMovement.isEgreso ? '-' : '+'}{formatMoney(selectedMovement.amount)}</p>
-                                    </div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{selectedMovement.type}</p>
-                                </div>
-                            ) : (
-                                <>
-                                    <div className="mb-4 flex justify-between items-start gap-4">
-                                        <div className="text-sm text-slate-600 space-y-1">
-                                            <p><strong>Fecha:</strong> {new Date(selectedMovement.date).toLocaleString()}</p>
-                                            <p><strong>Cliente:</strong> {selectedMovement.customer}</p>
-                                            <p><strong>Comprobante:</strong> {selectedMovement.invoice_letter === 'A' ? 'Factura A' : selectedMovement.invoice_letter === 'B' ? 'Factura B' : 'Ticket'}</p>
-                                            <p><strong>N° Ticket:</strong> {selectedMovement.ticket_number || '---'}</p>
-
-                                        </div>
-                                        {selectedMovement.status === 'cancelled' && (
-                                            <div className="border-2 border-dashed border-red-200 bg-red-50 text-red-500 px-6 py-4 rounded-xl font-black uppercase tracking-widest text-sm text-center">
-                                                Anulado / Cancelado
-                                            </div>
-                                        )}
-                                    </div>
+                                <div className="overflow-x-auto">
                                     <table className="w-full text-sm">
                                         <thead className="bg-slate-50 text-slate-500 text-xs uppercase font-medium">
                                             <tr>
-                                                <th className="px-4 py-3 text-left w-1/4">Producto</th>
-                                                <th className="px-4 py-3 text-left w-1/5">Proveedor</th>
-                                                <th className="px-4 py-3 text-left w-1/5">Rubros</th>
+                                                <th className="px-4 py-3 text-left min-w-[150px]">Producto</th>
+                                                <th className="px-4 py-3 text-left">Proveedor</th>
+                                                <th className="px-4 py-3 text-left">Rubros</th>
                                                 <th className="px-4 py-3 text-center">Cant.</th>
                                                 <th className="px-4 py-3 text-right">Unitario</th>
                                                 <th className="px-4 py-3 text-right">Subtotal</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100">
-                                            {selectedMovement.items?.map((item: any, idx: number) => (
+                                            {selectedSale.sale_items?.map((item: any, idx: number) => (
                                                 <tr key={idx}>
                                                     <td className="px-4 py-3 text-slate-700 font-medium align-top">
                                                         <div className="flex flex-col">
@@ -1677,22 +1472,22 @@ export default function CashRegisterView({
                                             <tr>
                                                 <td colSpan={5} className="px-4 py-2 text-right text-xs font-bold text-slate-500 uppercase">Subtotal</td>
                                                 <td className="px-4 py-2 text-right text-slate-700 font-bold">
-                                                    {formatMoney(selectedMovement.items?.reduce((acc: number, item: any) => acc + (item.unit_price * item.quantity), 0) || 0)}
+                                                    {formatMoney(selectedSale.sale_items?.reduce((acc: number, item: any) => acc + (item.unit_price * item.quantity), 0) || 0)}
                                                 </td>
                                             </tr>
-                                            {selectedMovement.discount_general && (() => {
-                                                const eligible = selectedMovement.items?.reduce((acc: number, item: any) => {
+                                            {selectedSale.discount_general && (() => {
+                                                const eligible = selectedSale.sale_items?.reduce((acc: number, item: any) => {
                                                     if (item.exclude_from_general_discount) return acc;
                                                     return acc + (item.unit_price * item.quantity);
                                                 }, 0) || 0;
-                                                const adj = selectedMovement.discount_general.type === 'PERCENT'
-                                                    ? eligible * (selectedMovement.discount_general.value / 100)
-                                                    : selectedMovement.discount_general.value;
+                                                const adj = selectedSale.discount_general.type === 'PERCENT'
+                                                    ? eligible * (selectedSale.discount_general.value / 100)
+                                                    : selectedSale.discount_general.value;
 
                                                 return (
                                                     <tr>
                                                         <td colSpan={5} className={`px-4 py-2 text-right text-xs font-bold uppercase ${adj > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
-                                                            {adj > 0 ? 'Recargo' : 'Descuento General'} {selectedMovement.discount_general.type === 'PERCENT' ? `(${Math.abs(selectedMovement.discount_general.value)}%)` : ''}
+                                                            {adj > 0 ? 'Recargo' : 'Descuento General'} {selectedSale.discount_general.type === 'PERCENT' ? `(${Math.abs(selectedSale.discount_general.value)}%)` : ''}
                                                         </td>
                                                         <td className={`px-4 py-2 text-right font-bold ${adj > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
                                                             {adj > 0 ? '+' : ''}{formatMoney(adj)}
@@ -1700,17 +1495,17 @@ export default function CashRegisterView({
                                                     </tr>
                                                 )
                                             })()}
-                                            {selectedMovement.surcharge_general && (() => {
-                                                const eligible = selectedMovement.items?.reduce((acc: number, item: any) => acc + (item.unit_price * item.quantity), 0) || 0;
-                                                const surcharge = selectedMovement.surcharge_general.applied_amount
-                                                    || (selectedMovement.surcharge_general.value
-                                                        ? eligible * (selectedMovement.surcharge_general.value / 100)
+                                            {selectedSale.surcharge_general && (() => {
+                                                const eligible = selectedSale.sale_items?.reduce((acc: number, item: any) => acc + (item.unit_price * item.quantity), 0) || 0;
+                                                const surcharge = selectedSale.surcharge_general.applied_amount
+                                                    || (selectedSale.surcharge_general.value
+                                                        ? eligible * (selectedSale.surcharge_general.value / 100)
                                                         : 0);
 
                                                 return (
                                                     <tr>
                                                         <td colSpan={5} className={`px-4 py-2 text-right text-xs font-bold uppercase ${surcharge > 0 ? 'text-blue-600' : 'text-emerald-600'}`}>
-                                                            {surcharge > 0 ? 'Recargo Cliente' : 'Descuento Cliente'} {selectedMovement.surcharge_general.type === 'PERCENT' ? `(${Math.abs(selectedMovement.surcharge_general.value)}%)` : ''}
+                                                            {surcharge > 0 ? 'Recargo Cliente' : 'Descuento Cliente'} {selectedSale.surcharge_general.type === 'PERCENT' ? `(${Math.abs(selectedSale.surcharge_general.value)}%)` : ''}
                                                         </td>
                                                         <td className={`px-4 py-2 text-right font-bold ${surcharge > 0 ? 'text-blue-600' : 'text-emerald-600'}`}>
                                                             {surcharge > 0 ? '+' : ''}{formatMoney(surcharge)}
@@ -1718,8 +1513,8 @@ export default function CashRegisterView({
                                                     </tr>
                                                 )
                                             })()}
-                                            {selectedMovement.manual_tax_added && (() => {
-                                                const { vat } = (selectedMovement.items || []).reduce((acc: any, item: any) => {
+                                            {selectedSale.manual_tax_added && (() => {
+                                                const { vat } = (selectedSale.items || []).reduce((acc: any, item: any) => {
                                                     const taxRate = item.tax_rate ?? 0;
                                                     const gross = item.unit_price;
                                                     const net = gross / (1 + taxRate / 100);
@@ -1737,70 +1532,70 @@ export default function CashRegisterView({
                                                     </tr>
                                                 )
                                             })()}
-                                            {selectedMovement.rounding_difference !== 0 && (
+                                            {selectedSale.rounding_difference !== 0 && (
                                                 <tr>
                                                     <td colSpan={5} className="px-4 py-2 text-right text-xs font-bold text-slate-500 uppercase">Redondeo</td>
                                                     <td className="px-4 py-2 text-right text-slate-700 font-bold">
-                                                        {selectedMovement.rounding_difference > 0 ? '+' : ''}{formatMoney(selectedMovement.rounding_difference || 0)}
+                                                        {selectedSale.rounding_difference > 0 ? '+' : ''}{formatMoney(selectedSale.rounding_difference || 0)}
                                                     </td>
                                                 </tr>
                                             )}
-                                            {selectedMovement.invoice_letter === 'A' && selectedMovement.fiscal_data && (() => {
-                                                const safeNet = (selectedMovement.fiscal_data.net_amount && !isNaN(selectedMovement.fiscal_data.net_amount)) ? selectedMovement.fiscal_data.net_amount : (selectedMovement.amount / 1.21);
-                                                const safeVat = (selectedMovement.fiscal_data.vat_amount && !isNaN(selectedMovement.fiscal_data.vat_amount)) ? selectedMovement.fiscal_data.vat_amount : (selectedMovement.amount - safeNet);
-                                                return (
-                                                    <>
-                                                        <tr className="border-t border-slate-100">
-                                                            <td colSpan={5} className="px-4 py-1 text-right text-xs font-bold text-purple-600 uppercase">Neto Gravado (21%)</td>
-                                                            <td className="px-4 py-1 text-right text-purple-600 font-bold">{formatMoney(safeNet)}</td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td colSpan={5} className="px-4 py-1 text-right text-xs font-bold text-purple-600 uppercase">IVA (21%)</td>
-                                                            <td className="px-4 py-1 text-right text-purple-600 font-bold">{formatMoney(safeVat)}</td>
-                                                        </tr>
-                                                    </>
-                                                )
-                                            })()}
+                                            {selectedSale.invoice_letter === 'A' && selectedSale.fiscal_data && (
+                                                <>
+                                                    <tr className="border-t border-slate-100">
+                                                        <td colSpan={5} className="px-4 py-1 text-right text-xs font-bold text-purple-600 uppercase">Neto Gravado (21%)</td>
+                                                        <td className="px-4 py-1 text-right text-purple-600 font-medium">{formatMoney(selectedSale.fiscal_data.net_amount)}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td colSpan={5} className="px-4 py-1 text-right text-xs font-bold text-purple-600 uppercase">IVA (21%)</td>
+                                                        <td className="px-4 py-1 text-right text-purple-600 font-medium">{formatMoney(selectedSale.fiscal_data.vat_amount)}</td>
+                                                    </tr>
+                                                </>
+                                            )}
                                             <tr className="border-t border-slate-200">
                                                 <td colSpan={5} className="px-4 py-3 text-right text-sm font-black text-slate-900 uppercase">Total Final</td>
-                                                <td className="px-4 py-3 text-right text-indigo-600 text-xl font-black">{formatMoney(selectedMovement.amount)}</td>
+                                                <td className="px-4 py-3 text-right text-indigo-600 text-xl font-black">{formatMoney(selectedSale.total_amount)}</td>
                                             </tr>
                                         </tfoot>
                                     </table>
+                                </div>
 
-                                    <div className="mt-6 border-t pt-6">
-                                        <h4 className="text-xs font-black uppercase text-slate-500 mb-3">Métodos de Pago</h4>
-                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                            {selectedMovement.payments?.map((p: any, idx: number) => {
-                                                const map: any = {
-                                                    'cash': { label: 'Efectivo', icon: Banknote, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                                                    'credit_card': { label: 'Crédito', icon: CreditCard, color: 'text-purple-600', bg: 'bg-purple-50' },
-                                                    'debit_card': { label: 'Débito', icon: CreditCard, color: 'text-pink-600', bg: 'bg-pink-50' },
-                                                    'transfer': { label: 'Transferencia', icon: ArrowRightLeft, color: 'text-blue-600', bg: 'bg-blue-50' },
-                                                    'check': { label: 'Cheque', icon: Banknote, color: 'text-orange-600', bg: 'bg-orange-50' },
-                                                    'ACCOUNT': { label: 'Cta. Cte.', icon: Wallet, color: 'text-slate-600', bg: 'bg-slate-100' }
-                                                };
-                                                const info = map[p.method] || { label: p.method, icon: Wallet, color: 'text-slate-600', bg: 'bg-slate-50' };
-                                                const Icon = info.icon;
-                                                if (p.method === 'card') { info.label = 'Tarjeta'; info.color = 'text-purple-600'; }
-                                                return (
-                                                    <div key={idx} className={`flex items-center gap-3 p-3 rounded-xl border border-slate-100 ${info.bg}`}>
-                                                        <Icon className={`w-5 h-5 ${info.color}`} />
-                                                        <div>
-                                                            <p className={`text-[10px] font-bold uppercase ${info.color} opacity-80`}>{info.label}</p>
-                                                            <p className="font-bold text-slate-900">{formatMoney(p.amount)}</p>
-                                                        </div>
+                                <div className="mt-6 border-t pt-6">
+                                    <h4 className="text-xs font-black uppercase text-slate-500 mb-3">Métodos de Pago</h4>
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                        {selectedSale.payments?.map((p: any, idx: number) => {
+                                            const map: any = {
+                                                'cash': { label: 'Efectivo', icon: Banknote, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                                                'credit_card': { label: 'Crédito', icon: CreditCard, color: 'text-purple-600', bg: 'bg-purple-50' },
+                                                'debit_card': { label: 'Débito', icon: CreditCard, color: 'text-pink-600', bg: 'bg-pink-50' },
+                                                'transfer': { label: 'Transferencia', icon: ArrowRightLeft, color: 'text-blue-600', bg: 'bg-blue-50' },
+                                                'check': { label: 'Cheque', icon: Banknote, color: 'text-orange-600', bg: 'bg-orange-50' },
+                                                'ACCOUNT': { label: 'Cta. Cte.', icon: Wallet, color: 'text-slate-600', bg: 'bg-slate-100' }
+                                            };
+                                            const info = map[p.method] || { label: p.method, icon: Wallet, color: 'text-slate-600', bg: 'bg-slate-50' };
+                                            const Icon = info.icon;
+                                            if (p.method === 'card') { info.label = 'Tarjeta'; info.color = 'text-purple-600'; }
+                                            return (
+                                                <div key={idx} className={`flex items-center gap-3 p-3 rounded-xl border border-slate-100 ${info.bg}`}>
+                                                    <Icon className={`w-5 h-5 ${info.color}`} />
+                                                    <div>
+                                                        <p className={`text-[10px] font-bold uppercase ${info.color} opacity-80`}>{info.label}</p>
+                                                        <p className="font-bold text-slate-900">{formatMoney(p.amount)}</p>
                                                     </div>
-                                                )
-                                            })}
-                                        </div>
+                                                </div>
+                                            )
+                                        })}
                                     </div>
-                                </>
-                            )}
-                        </div>
+                                </div>
+                                <Button onClick={() => handlePrint(selectedSale)} className="w-full mt-6 bg-slate-900 text-white font-bold h-12 rounded-xl flex items-center justify-center gap-2">
+                                    <Printer size={18} /> Reimprimir Ticket
+                                </Button>
+                            </>
+                        )}
                     </div>
-                </div>
-            )}
+                </DialogContent>
+            </Dialog>
+
         </div>
     )
 }

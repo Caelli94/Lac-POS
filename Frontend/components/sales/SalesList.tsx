@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useTransition, useMemo, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -333,7 +333,7 @@ export default function SalesList({ initialSales, pagination, orgId, slug, org, 
         <div className="w-full">
             {/* SUCCESS MODAL FOR CANCELLATION */}
             <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
-                <DialogContent className="max-w-[400px] bg-white rounded-[2rem] p-8 border-none shadow-2xl z-[100]">
+                <DialogContent className="w-[90vw] sm:max-w-[400px] bg-white rounded-[2rem] p-8 border-none shadow-2xl z-[100]">
                     <DialogHeader className="hidden">
                         <DialogTitle>Venta Anulada Exitosamente</DialogTitle>
                     </DialogHeader>
@@ -358,7 +358,7 @@ export default function SalesList({ initialSales, pagination, orgId, slug, org, 
 
             {/* INVOICE VIEWER DIALOG */}
             <Dialog open={showInvoice} onOpenChange={setShowInvoice}>
-                <DialogContent className="max-w-[850px] bg-slate-100 p-0 overflow-y-auto max-h-[90vh]">
+                <DialogContent className="w-[95vw] sm:max-w-[850px] bg-slate-100 p-0 overflow-hidden max-h-[95vh] md:max-h-[90vh] flex flex-col">
                     <div className="sticky top-0 z-10 bg-white p-4 border-b flex justify-between items-center shadow-sm">
                         <h3 className="font-bold text-lg uppercase">Vista Previa de Factura</h3>
                         <div className="flex gap-2">
@@ -409,7 +409,7 @@ export default function SalesList({ initialSales, pagination, orgId, slug, org, 
 
             {/* CONFIRMATION MODAL (CANCEL SALE) */}
             <Dialog open={!!saleToCancel} onOpenChange={(o) => { if (!o) setSaleToCancel(null) }}>
-                <DialogContent className="max-w-[400px] bg-white rounded-[2rem] p-8 border-none shadow-2xl z-[100]">
+                <DialogContent className="w-[90vw] sm:max-w-[400px] bg-white rounded-[2rem] p-8 border-none shadow-2xl z-[100]">
                     <DialogHeader>
                         <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-center text-slate-900">¿ANULAR VENTA?</DialogTitle>
                     </DialogHeader>
@@ -447,7 +447,7 @@ export default function SalesList({ initialSales, pagination, orgId, slug, org, 
 
                 {/* FISCALIZATION CONFIRMATION MODAL (Updated Style) */}
                 <Dialog open={!!saleToFiscalize} onOpenChange={(o) => { if (!o) setSaleToFiscalize(null) }}>
-                    <DialogContent className="max-w-[400px] bg-white rounded-[2rem] p-8 border-none shadow-2xl z-[100]">
+                    <DialogContent className="w-[90vw] sm:max-w-[400px] bg-white rounded-[2rem] p-8 border-none shadow-2xl z-[100]">
                         <DialogHeader>
                             <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-center text-slate-900">¿FACTURAR EN ARCA?</DialogTitle>
                         </DialogHeader>
@@ -854,232 +854,172 @@ export default function SalesList({ initialSales, pagination, orgId, slug, org, 
                 </div>
             </div >
 
-            {selectedSale && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-7xl overflow-hidden animate-in zoom-in-95 duration-200">
-                        <div className="bg-slate-50 px-6 py-4 border-b flex justify-between items-center">
-                            <h3 className="font-semibold text-lg">Detalle de Venta</h3>
-                            <button onClick={() => setSelectedSale(null)} className="text-slate-400 hover:text-slate-600 text-xl">✕</button>
-                        </div>
-                        <div className="p-6 max-h-[60vh] overflow-y-auto">
-                            <div className="mb-4 flex justify-between items-start gap-4">
-                                <div className="text-sm text-slate-600 space-y-1">
-                                    <p><strong>Fecha:</strong> {new Date(selectedSale.date || selectedSale.created_at).toLocaleString([], { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })}</p>
-                                    <p><strong>Cliente:</strong> {selectedSale.customers?.name || 'Cliente Final'}</p>
-                                    <p><strong>Comprobante:</strong> {selectedSale.invoice_letter === 'A' ? 'Factura A' : selectedSale.invoice_letter === 'B' ? 'Factura B' : 'Ticket'}</p>
-                                    <p><strong>N° Ticket:</strong> {selectedSale.ticket_number || '---'}</p>
+            {/* DETAIL MODAL CONVERTED TO DIALOG */}
+            <Dialog open={!!selectedSale} onOpenChange={(o) => { if (!o) setSelectedSale(null) }}>
+                <DialogContent className="w-[95vw] sm:max-w-7xl bg-white rounded-[2rem] p-0 border-none shadow-2xl overflow-hidden h-[95vh] md:h-[90vh] flex flex-col transition-all">
+                    <DialogHeader className="bg-slate-50 px-6 py-4 border-b flex justify-between items-center shrink-0">
+                        <DialogTitle className="font-black text-xl uppercase tracking-tight">Detalle de Venta</DialogTitle>
+                    </DialogHeader>
+                    {selectedSale && (
+                        <div className="flex-1 overflow-hidden flex flex-col p-6">
+                            <div className="p-0 overflow-y-auto flex-1 pr-2 -mr-2">
+                                <div className="mb-6 flex flex-col md:flex-row justify-between items-start gap-4">
+                                    <div className="text-sm text-slate-600 space-y-1.5">
+                                        <p className="flex items-center gap-2"><strong className="uppercase text-[10px] text-slate-400">Fecha:</strong> <span className="font-bold">{new Date(selectedSale.date || selectedSale.created_at).toLocaleString([], { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })}</span></p>
+                                        <p className="flex items-center gap-2"><strong className="uppercase text-[10px] text-slate-400">Cliente:</strong> <span className="font-bold">{selectedSale.customers?.name || 'Cliente Final'}</span></p>
+                                        <p className="flex items-center gap-2"><strong className="uppercase text-[10px] text-slate-400">Comprobante:</strong> <span className="font-bold">{selectedSale.invoice_letter === 'A' ? 'Factura A' : selectedSale.invoice_letter === 'B' ? 'Factura B' : 'Ticket'}</span></p>
+                                        <p className="flex items-center gap-2"><strong className="uppercase text-[10px] text-slate-400">N° Ticket:</strong> <span className="font-mono bg-slate-100 px-1.5 rounded">{selectedSale.ticket_number || '---'}</span></p>
 
-                                    {/* AFIP DATA */}
-                                    {/* AFIP DATA & ACTIONS */}
-                                    {selectedSale.afip_data?.cae ? (
-                                        <div className="mt-2 space-y-2">
-                                            <div className="bg-indigo-50 border border-indigo-100 p-2 rounded-lg flex items-center gap-2">
-                                                <ShieldCheck className="text-indigo-600" size={16} />
-                                                <div>
-                                                    <p className="text-[10px] font-black uppercase text-indigo-600">Comprobante Fiscal Autorizado</p>
-                                                    <p className="text-xs font-mono text-indigo-800">CAE: {selectedSale.afip_data.cae}</p>
+                                        {selectedSale.afip_data?.cae ? (
+                                            <div className="mt-3 space-y-2 max-w-xs">
+                                                <div className="bg-indigo-50 border border-indigo-100 p-3 rounded-xl flex items-center gap-3">
+                                                    <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                                                        <ShieldCheck className="text-indigo-600" size={18} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[9px] font-black uppercase text-indigo-600 tracking-wider leading-none mb-1">Fiscalizado</p>
+                                                        <p className="text-xs font-mono font-bold text-indigo-800">CAE: {selectedSale.afip_data.cae}</p>
+                                                    </div>
                                                 </div>
+                                                <Button
+                                                    onClick={() => setShowInvoice(true)}
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="w-full h-10 text-[10px] font-black border-indigo-200 text-indigo-700 hover:bg-indigo-50 uppercase rounded-xl shadow-sm transition-all"
+                                                >
+                                                    <Printer size={14} className="mr-2" /> Ver Factura
+                                                </Button>
                                             </div>
-                                            <Button
-                                                onClick={() => setShowInvoice(true)}
-                                                variant="outline"
-                                                size="sm"
-                                                className="w-full h-8 text-xs font-bold border-indigo-200 text-indigo-700 hover:bg-indigo-50 uppercase"
-                                            >
-                                                <Printer size={14} className="mr-2" /> Ver / Imprimir Factura
-                                            </Button>
-                                        </div>
-                                    ) : (
-                                        selectedSale.status !== 'cancelled' && org?.afip_settings?.enabled && (
-                                            <Button onClick={() => handleFiscalize(selectedSale)} size="sm" variant="outline" className="mt-2 h-8 text-xs border-indigo-200 hover:bg-indigo-50 text-indigo-700 font-bold">
-                                                <FileText size={14} className="mr-2" /> Fiscalizar (ARCA)
-                                            </Button>
-                                        )
-                                    )}
-                                </div>
-                                {selectedSale.status === 'cancelled' && (
-                                    <div className="border-2 border-dashed border-red-200 bg-red-50 text-red-500 px-6 py-4 rounded-xl font-black uppercase tracking-widest text-sm text-center">
-                                        Anulado / Cancelado
+                                        ) : (
+                                            selectedSale.status !== 'cancelled' && org?.afip_settings?.enabled && (
+                                                <Button onClick={() => handleFiscalize(selectedSale)} size="sm" variant="outline" className="mt-3 h-10 text-[10px] border-indigo-200 hover:bg-indigo-50 text-indigo-700 font-black uppercase rounded-xl shadow-sm">
+                                                    <FileText size={14} className="mr-2" /> Fiscalizar (ARCA)
+                                                </Button>
+                                            )
+                                        )}
                                     </div>
-                                )}
-                            </div>
-                            <table className="w-full text-sm">
-                                <thead className="bg-slate-50 text-slate-500 text-xs uppercase font-medium">
-                                    <tr>
-                                        <th className="px-4 py-3 text-left w-1/4">Producto</th>
-                                        <th className="px-4 py-3 text-left w-1/5">Proveedor</th>
-                                        <th className="px-4 py-3 text-left w-1/5">Rubros</th>
-                                        <th className="px-4 py-3 text-center">Cant.</th>
-                                        <th className="px-4 py-3 text-right">Unitario</th>
-                                        <th className="px-4 py-3 text-right">Subtotal</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                    {selectedSale.sale_items?.map((item: any, idx: number) => (
-                                        <tr key={idx}>
-                                            <td className="px-4 py-3 text-slate-700 font-medium align-top">
-                                                <div className="flex flex-col">
-                                                    <span className="font-bold">{item.product_name}</span>
-                                                    {(item.variant_name || item.product_variant_name) && (
-                                                        <span className="text-[10px] text-indigo-600 font-black uppercase mt-0.5">
-                                                            {item.variant_name || item.product_variant_name}
-                                                        </span>
-                                                    )}
-                                                    <span className="text-[10px] text-slate-400 font-mono">{item.product_details?.sku || ''}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-3 align-top text-xs text-slate-600">{item.product_details?.supplier?.name || '---'}</td>
-                                            <td className="px-4 py-3 align-top">
-                                                <div className="flex flex-wrap gap-1">
-                                                    {item.product_details?.categories?.map((c: any) => (
-                                                        <span key={c._id} className="text-[9px] bg-slate-100 text-slate-500 px-1 rounded border border-slate-200">{c.name}</span>
-                                                    ))}
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-3 text-center text-slate-400 align-top">x{item.quantity}</td>
-                                            <td className="px-4 py-3 text-right text-slate-500 align-top">{formatMoney(item.unit_price)}</td>
-                                            <td className="px-4 py-3 text-right font-bold text-slate-700 align-top">{formatMoney(item.unit_price * item.quantity)}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                                <tfoot className="border-t">
-                                    <tr>
-                                        <td colSpan={5} className="px-4 py-2 text-right text-xs font-bold text-slate-500 uppercase">Subtotal</td>
-                                        <td className="px-4 py-2 text-right text-slate-700 font-bold">
-                                            {formatMoney(financials?.subtotal || 0)}
-                                        </td>
-                                    </tr>
-                                    {financials && Math.abs(financials.adjustment) >= 0.01 && (
-                                        <tr>
-                                            <td colSpan={5} className={`px-4 py-2 text-right text-xs font-bold uppercase ${financials.adjustment > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
-                                                {financials.adjustment > 0 ? 'Recargo' : 'Descuento General'} {selectedSale.discount_general?.type === 'PERCENT' ? `(${Math.abs(selectedSale.discount_general.value)}%)` : ''}
-                                            </td>
-                                            <td className={`px-4 py-2 text-right font-bold ${financials.adjustment > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
-                                                {financials.adjustment > 0 ? '+' : ''}{formatMoney(financials.adjustment)}
-                                            </td>
-                                        </tr>
+                                    {selectedSale.status === 'cancelled' && (
+                                        <div className="border-2 border-dashed border-red-200 bg-red-50 text-red-500 px-8 py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] text-sm text-center animate-pulse">
+                                            Venta Anulada
+                                        </div>
                                     )}
-                                    {financials && Math.abs(financials.surcharge) >= 0.01 && (
-                                        <tr>
-                                            <td colSpan={5} className={`px-4 py-2 text-right text-xs font-bold uppercase ${financials.surcharge > 0 ? 'text-blue-600' : 'text-emerald-600'}`}>
-                                                {financials.surcharge > 0 ? 'Recargo Cliente' : 'Descuento Cliente'} {selectedSale.surcharge_general?.type === 'PERCENT' ? `(${Math.abs(selectedSale.surcharge_general.value)}%)` : ''}
-                                            </td>
-                                            <td className={`px-4 py-2 text-right font-bold ${financials.surcharge > 0 ? 'text-blue-600' : 'text-emerald-600'}`}>
-                                                {financials.surcharge > 0 ? '+' : ''}{formatMoney(financials.surcharge)}
-                                            </td>
-                                        </tr>
-                                    )}
-                                    {financials && financials.vatAmount > 0.01 && (
-                                        <tr>
-                                            <td colSpan={5} className="px-4 py-2 text-right text-xs font-bold text-blue-600 uppercase">IVA Agregado</td>
-                                            <td className="px-4 py-2 text-right text-blue-600 font-bold">
-                                                +{formatMoney(financials.vatAmount)}
-                                            </td>
-                                        </tr>
-                                    )}
-                                    {financials && Math.abs(financials.rounding) >= 0.01 && (
-                                        <tr>
-                                            <td colSpan={5} className="px-4 py-2 text-right text-xs font-bold text-slate-500 uppercase">Redondeo</td>
-                                            <td className="px-4 py-2 text-right text-slate-700 font-bold">
-                                                {financials.rounding > 0 ? '+' : ''}{formatMoney(financials.rounding)}
-                                            </td>
-                                        </tr>
-                                    )}
-                                    {selectedSale.invoice_letter === 'A' && selectedSale.fiscal_data && (() => {
-                                        const total = financials?.total || 0;
-                                        const safeNet = (selectedSale.fiscal_data.net_amount && !isNaN(selectedSale.fiscal_data.net_amount)) ? selectedSale.fiscal_data.net_amount : (total / 1.21);
-                                        const safeVat = (selectedSale.fiscal_data.vat_amount && !isNaN(selectedSale.fiscal_data.vat_amount)) ? selectedSale.fiscal_data.vat_amount : (total - safeNet);
-                                        return (
-                                            <>
-                                                <tr className="border-t border-slate-100">
-                                                    <td colSpan={5} className="px-4 py-1 text-right text-xs font-bold text-purple-600 uppercase">Neto Gravado (21%)</td>
-                                                    <td className="px-4 py-1 text-right text-purple-600 font-bold">{formatMoney(safeNet)}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td colSpan={5} className="px-4 py-1 text-right text-xs font-bold text-purple-600 uppercase">IVA (21%)</td>
-                                                    <td className="px-4 py-1 text-right text-purple-600 font-bold">{formatMoney(safeVat)}</td>
-                                                </tr>
-                                            </>
-                                        )
-                                    })()}
-                                    <tr className="border-t border-slate-200">
-                                        <td colSpan={5} className="px-4 py-3 text-right text-sm font-black text-slate-900 uppercase">Total Final</td>
-                                        <td className="px-4 py-3 text-right text-indigo-600 text-xl font-black">{formatMoney(financials?.total || 0)}</td>
-                                    </tr>
-                                </tfoot>
-                            </table>
+                                </div>
 
-                            {/* Payment Methods Breakdown */}
-                            <div className="mt-6 border-t pt-6">
-                                <h4 className="text-xs font-black uppercase text-slate-500 mb-3">Métodos de Pago</h4>
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                    {selectedSale.payments?.map((p: any, idx: number) => {
-                                        const map: any = {
-                                            'cash': { label: 'Efectivo', icon: Banknote, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                                            'credit_card': { label: 'Crédito', icon: CreditCard, color: 'text-purple-600', bg: 'bg-purple-50' },
-                                            'debit_card': { label: 'Débito', icon: CreditCard, color: 'text-pink-600', bg: 'bg-pink-50' },
-                                            'transfer': { label: 'Transferencia', icon: ArrowRightLeft, color: 'text-blue-600', bg: 'bg-blue-50' },
-                                            'check': { label: 'Cheque', icon: Banknote, color: 'text-orange-600', bg: 'bg-orange-50' },
-                                            'ACCOUNT': { label: 'Cta. Cte.', icon: Wallet, color: 'text-slate-600', bg: 'bg-slate-100' }
-                                        };
-                                        const info = map[p.method] || { label: p.method, icon: Wallet, color: 'text-slate-600', bg: 'bg-slate-50' };
-                                        const Icon = info.icon;
-                                        if (p.method === 'card') { info.label = 'Tarjeta'; info.color = 'text-purple-600'; }
-                                        return (
-                                            <div key={idx} className={`flex items-center gap-3 p-3 rounded-xl border border-slate-100 ${info.bg}`}>
-                                                <Icon className={`w-5 h-5 ${info.color}`} />
-                                                <div>
-                                                    <p className={`text-[10px] font-bold uppercase ${info.color} opacity-80`}>{info.label}</p>
-                                                    <p className="font-bold text-slate-900">{formatMoney(p.amount)}</p>
+                                <div className="rounded-2xl border border-slate-100 overflow-hidden shadow-sm mb-6">
+                                    <table className="w-full text-sm">
+                                        <thead className="bg-slate-50 text-slate-400 text-[10px] uppercase font-black tracking-widest border-b border-slate-100">
+                                            <tr>
+                                                <th className="px-4 py-3 text-left">Producto</th>
+                                                <th className="px-4 py-3 text-left hidden sm:table-cell">Proveedor</th>
+                                                <th className="px-4 py-3 text-center">Cant.</th>
+                                                <th className="px-4 py-3 text-right">Unitario</th>
+                                                <th className="px-4 py-3 text-right">Subtotal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-50 bg-white">
+                                            {selectedSale.sale_items?.map((item: any, idx: number) => (
+                                                <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                                                    <td className="px-4 py-4 align-top">
+                                                        <div className="flex flex-col">
+                                                            <span className="font-bold text-slate-800">{item.product_name}</span>
+                                                            {(item.variant_name || item.product_variant_name) && (
+                                                                <span className="text-[9px] text-indigo-600 font-black uppercase mt-1 bg-indigo-50 w-fit px-1.5 rounded">
+                                                                    {item.variant_name || item.product_variant_name}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-4 py-4 align-top text-[10px] text-slate-500 font-medium hidden sm:table-cell uppercase">
+                                                        {item.product_details?.supplier?.name || '---'}
+                                                    </td>
+                                                    <td className="px-4 py-4 text-center text-slate-900 font-bold align-top text-xs">x{item.quantity}</td>
+                                                    <td className="px-4 py-4 text-right text-slate-500 align-top text-xs">{formatMoney(item.unit_price)}</td>
+                                                    <td className="px-4 py-4 text-right font-black text-slate-800 align-top text-xs">{formatMoney(item.unit_price * item.quantity)}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                        <tfoot className="bg-slate-50/50 border-t border-slate-100">
+                                            <tr>
+                                                <td colSpan={4} className="px-4 py-2 text-right text-[10px] font-black text-slate-400 uppercase">Subtotal</td>
+                                                <td className="px-4 py-2 text-right text-slate-700 font-bold text-xs">{formatMoney(financials?.subtotal || 0)}</td>
+                                            </tr>
+                                            {financials && Math.abs(financials.adjustment) >= 0.01 && (
+                                                <tr>
+                                                    <td colSpan={4} className={`px-4 py-2 text-right text-[10px] font-black uppercase ${financials.adjustment > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                                                        {financials.adjustment > 0 ? 'Recargo' : 'Desc. Gral.'} {selectedSale.discount_general?.type === 'PERCENT' ? `(${Math.abs(selectedSale.discount_general.value)}%)` : ''}
+                                                    </td>
+                                                    <td className={`px-4 py-2 text-right font-bold text-xs ${financials.adjustment > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                                                        {financials.adjustment > 0 ? '+' : ''}{formatMoney(financials.adjustment)}
+                                                    </td>
+                                                </tr>
+                                            )}
+                                            {financials && Math.abs(financials.surcharge) >= 0.01 && (
+                                                <tr>
+                                                    <td colSpan={4} className={`px-4 py-2 text-right text-[10px] font-black uppercase ${financials.surcharge > 0 ? 'text-blue-600' : 'text-emerald-600'}`}>
+                                                        {financials.surcharge > 0 ? 'Recargo Clie.' : 'Desc. Clie.'} {selectedSale.surcharge_general?.type === 'PERCENT' ? `(${Math.abs(selectedSale.surcharge_general.value)}%)` : ''}
+                                                    </td>
+                                                    <td className={`px-4 py-2 text-right font-bold text-xs ${financials.surcharge > 0 ? 'text-blue-600' : 'text-emerald-600'}`}>
+                                                        {financials.surcharge > 0 ? '+' : ''}{formatMoney(financials.surcharge)}
+                                                    </td>
+                                                </tr>
+                                            )}
+                                            {financials && financials.vatAmount > 0.01 && (
+                                                <tr>
+                                                    <td colSpan={4} className="px-4 py-2 text-right text-[10px] font-black text-blue-600 uppercase">IVA (21%)</td>
+                                                    <td className="px-4 py-2 text-right text-blue-600 font-bold text-xs">+{formatMoney(financials.vatAmount)}</td>
+                                                </tr>
+                                            )}
+                                            {financials && Math.abs(financials.rounding) >= 0.01 && (
+                                                <tr>
+                                                    <td colSpan={4} className="px-4 py-2 text-right text-[10px] font-black text-slate-400 uppercase">Redondeo</td>
+                                                    <td className="px-4 py-2 text-right text-slate-700 font-bold text-xs">{financials.rounding > 0 ? '+' : ''}{formatMoney(financials.rounding)}</td>
+                                                </tr>
+                                            )}
+                                            <tr className="border-t-2 border-white">
+                                                <td colSpan={4} className="px-4 py-4 text-right text-xs font-black text-slate-900 uppercase">Total Final</td>
+                                                <td className="px-4 py-4 text-right text-indigo-600 text-xl font-black">{formatMoney(financials?.total || 0)}</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+
+                                <div className="mt-auto pt-6 border-t border-slate-100">
+                                    <h4 className="text-[10px] font-black uppercase text-slate-400 mb-4 tracking-widest">Desglose de Pagos</h4>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                        {selectedSale.payments?.map((p: any, idx: number) => {
+                                            const map: any = {
+                                                'cash': { label: 'Efectivo', icon: Banknote, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                                                'credit_card': { label: 'Crédito', icon: CreditCard, color: 'text-purple-600', bg: 'bg-purple-50' },
+                                                'debit_card': { label: 'Débito', icon: CreditCard, color: 'text-pink-600', bg: 'bg-pink-50' },
+                                                'transfer': { label: 'Transf.', icon: ArrowRightLeft, color: 'text-blue-600', bg: 'bg-blue-50' },
+                                                'ACCOUNT': { label: 'Cta. Cte.', icon: Wallet, color: 'text-slate-600', bg: 'bg-slate-100' }
+                                            };
+                                            const info = map[p.method] || { label: p.method, icon: Wallet, color: 'text-slate-600', bg: 'bg-slate-50' };
+                                            const Icon = info.icon;
+                                            return (
+                                                <div key={idx} className={`flex items-center gap-3 p-3 rounded-2xl border border-slate-50 shadow-sm ${info.bg} transition-transform hover:scale-[1.02]`}>
+                                                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                                                        <Icon className={`w-5 h-5 ${info.color}`} />
+                                                    </div>
+                                                    <div>
+                                                        <p className={`text-[9px] font-black uppercase ${info.color} opacity-70 leading-none mb-1`}>{info.label}</p>
+                                                        <p className="font-black text-slate-900 text-sm tracking-tight">{formatMoney(p.amount)}</p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        )
-                                    })}
+                                            )
+                                        })}
+                                    </div>
                                 </div>
                             </div>
-                            <Button onClick={() => handlePrint(selectedSale)} className="w-full mt-6 bg-slate-900 text-white font-bold h-12 rounded-xl flex items-center justify-center gap-2">
-                                <Printer size={18} /> Reimprimir Ticket
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            )
-            }
-
-            {
-                saleToCancel && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-                        <div className="bg-white rounded-xl shadow-2xl w-full max-sm p-6 text-center">
-                            <AlertTriangle className="mx-auto h-12 w-12 text-red-600 mb-4" />
-                            <h3 className="text-lg font-bold mb-2">¿Anular esta venta?</h3>
-                            <p className="text-sm text-slate-500 mb-6 italic">El stock será devuelto automáticamente.</p>
-                            <div className="flex gap-3 justify-center">
-                                <button onClick={() => setSaleToCancel(null)} className="px-4 py-2 border rounded-lg w-full transition-all hover:bg-slate-50">Cancelar</button>
-                                <button onClick={confirmAnulation} disabled={isPending} className="px-4 py-2 bg-red-600 text-white font-medium rounded-lg w-full flex justify-center items-center">
-                                    {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar'}
-                                </button>
+                            <div className="mt-6 shrink-0">
+                                <Button onClick={() => handlePrint(selectedSale)} className="w-full bg-slate-900 hover:bg-black text-white font-black uppercase text-xs h-14 rounded-[1.5rem] flex items-center justify-center gap-3 shadow-xl shadow-slate-200 transition-all active:scale-[0.98]">
+                                    <Printer size={20} /> Reimprimir Ticket
+                                </Button>
                             </div>
                         </div>
-                    </div>
-                )
-            }
-
-            {
-                showSuccessModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-                        <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 text-center">
-                            <div className="mx-auto h-12 w-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-4">
-                                <CheckCircle2 size={24} />
-                            </div>
-                            <h3 className="text-lg font-bold mb-2 text-emerald-700">¡Venta Anulada!</h3>
-                            <p className="text-sm text-slate-500 mb-6">El stock ha sido devuelto al inventario correctamente.</p>
-                            <button onClick={() => setShowSuccessModal(false)} className="px-4 py-2 bg-slate-900 text-white font-bold rounded-lg w-full">
-                                Entendido
-                            </button>
-                        </div>
-                    </div>
-                )
-            }
+                    )}
+                </DialogContent>
+            </Dialog>
         </div >
     )
 }

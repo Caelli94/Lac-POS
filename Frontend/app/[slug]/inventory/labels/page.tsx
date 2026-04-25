@@ -72,12 +72,21 @@ export default function LabelPrintingPage({ params }: { params: Promise<{ slug: 
                     // Re-using getAll for now as it is what we have.
                     // Re-using getAll for now as it is what we have.
                     const response = await productService.getAll(org.id);
-                    const allProducts = response.data || []; // Handle paginated response structure
-                    const filtered = allProducts.filter((p: any) =>
-                        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        (p.sku && p.sku.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                        (p.barcode && p.barcode.includes(searchTerm))
-                    ).slice(0, 5); // Limit to top 5
+                    const allProducts = response.data || [];
+                    
+                    // Deduplicate by ID and filter
+                    const uniqueMap = new Map();
+                    allProducts.forEach((p: any) => {
+                        if (!uniqueMap.has(p.id)) uniqueMap.set(p.id, p);
+                    });
+
+                    const filtered = Array.from(uniqueMap.values())
+                        .filter((p: any) =>
+                            p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            (p.sku && p.sku.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                            (p.barcode && p.barcode.includes(searchTerm))
+                        )
+                        .slice(0, 5); 
                     setSearchResults(filtered);
                 } catch (e) {
                     console.error(e);
@@ -251,8 +260,8 @@ export default function LabelPrintingPage({ params }: { params: Promise<{ slug: 
 
                             {searchResults.length > 0 && (
                                 <div className="space-y-2 mt-4 animate-in fade-in slide-in-from-top-2">
-                                    {searchResults.map(p => (
-                                        <div key={p.id} className="space-y-1">
+                                    {searchResults.map((p, pIdx) => (
+                                        <div key={`${p.id}-${pIdx}`} className="space-y-1">
                                             {/* Base Product Option */}
                                             <button
                                                 onClick={() => addToQueue(p)}
@@ -268,19 +277,26 @@ export default function LabelPrintingPage({ params }: { params: Promise<{ slug: 
                                             {/* Variants if any */}
                                             {p.variants && p.variants.length > 0 && (
                                                 <div className="ml-4 pl-4 border-l-2 border-slate-100 space-y-1 py-1">
-                                                    {p.variants.map((v: any, idx: number) => (
-                                                        <button
-                                                            key={v._id || idx}
-                                                            onClick={() => addToQueue(p, v)}
-                                                            className="w-full text-left p-2 rounded-lg hover:bg-blue-50/50 flex items-center justify-between group transition-colors"
-                                                        >
-                                                            <div className="flex items-center gap-2">
-                                                                {v.color_hex && <div className="w-2 h-2 rounded-full" style={{ backgroundColor: v.color_hex }} />}
-                                                                <span className="text-[10px] font-bold uppercase text-slate-500 group-hover:text-blue-600">{v.size} {v.color && `- ${v.color}`}</span>
-                                                            </div>
-                                                            <span className="text-[9px] font-mono text-slate-400">{v.barcode || 'S/COD'}</span>
-                                                        </button>
-                                                    ))}
+                                                    {(() => {
+                                                        const uniqueVariants = new Map();
+                                                        p.variants.forEach((v: any, vIdx: number) => {
+                                                            const vKey = v._id || v.id || `temp-${vIdx}`;
+                                                            if (!uniqueVariants.has(vKey)) uniqueVariants.set(vKey, v);
+                                                        });
+                                                        return Array.from(uniqueVariants.values()).map((v: any, vIdx: number) => (
+                                                            <button
+                                                                key={`${p.id}-${v._id || 'none'}-${pIdx}-${vIdx}`}
+                                                                onClick={() => addToQueue(p, v)}
+                                                                className="w-full text-left p-2 rounded-lg hover:bg-blue-50/50 flex items-center justify-between group transition-colors"
+                                                            >
+                                                                <div className="flex items-center gap-2">
+                                                                    {v.color_hex && <div className="w-2 h-2 rounded-full" style={{ backgroundColor: v.color_hex }} />}
+                                                                    <span className="text-[10px] font-bold uppercase text-slate-500 group-hover:text-blue-600">{v.size} {v.color && `- ${v.color}`}</span>
+                                                                </div>
+                                                                <span className="text-[9px] font-mono text-slate-400">{v.barcode || 'S/COD'}</span>
+                                                            </button>
+                                                        ));
+                                                    })()}
                                                 </div>
                                             )}
                                         </div>

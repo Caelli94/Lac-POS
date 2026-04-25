@@ -183,15 +183,15 @@ export function BranchManager({ branches: initialBranches = [], orgId }: { branc
 
             {/* MODAL NUEVA SUCURSAL */}
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogContent className="sm:max-w-[600px] rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl">
+                <DialogContent className="w-[95vw] sm:max-w-[600px] rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl max-h-[95vh] flex flex-col">
                     <DialogHeader className="bg-slate-50 p-6 border-b border-slate-100 shrink-0">
                         <DialogTitle className="text-xl font-black uppercase tracking-tight text-slate-800">
                             Nueva Sucursal
                         </DialogTitle>
                     </DialogHeader>
 
-                    <div className="p-8 grid grid-cols-2 gap-6 bg-white text-slate-900">
-                        <div className="col-span-2 space-y-2">
+                    <div className="p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 bg-white text-slate-900 overflow-y-auto">
+                        <div className="md:col-span-2 space-y-2">
                             <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Nombre Comercial</Label>
                             <Input
                                 value={newBranch.name}
@@ -234,7 +234,7 @@ export function BranchManager({ branches: initialBranches = [], orgId }: { branc
                                 className="h-11 rounded-xl font-bold uppercase border-slate-200 bg-slate-50/50 shadow-none px-4 text-slate-900 focus-visible:ring-1 focus-visible:ring-indigo-500"
                             />
                         </div>
-                        <div className="col-span-2 space-y-2">
+                        <div className="md:col-span-2 space-y-2">
                             <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Dirección Exacta</Label>
                             <Input
                                 value={newBranch.address}
@@ -244,7 +244,7 @@ export function BranchManager({ branches: initialBranches = [], orgId }: { branc
                         </div>
                     </div>
 
-                    <DialogFooter className="p-6 bg-slate-50 border-t border-slate-100">
+                    <DialogFooter className="p-6 bg-slate-50 border-t border-slate-100 shrink-0 flex-row gap-3">
                         <Button
                             type="button"
                             variant="ghost"
@@ -267,15 +267,15 @@ export function BranchManager({ branches: initialBranches = [], orgId }: { branc
 
             {/* MODAL EDITAR */}
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                <DialogContent className="sm:max-w-[600px] rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl">
+                <DialogContent className="w-[95vw] sm:max-w-[600px] rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl max-h-[95vh] flex flex-col">
                     <DialogHeader className="bg-slate-50 p-6 border-b border-slate-100 shrink-0">
                         <DialogTitle className="text-xl font-black uppercase tracking-tight text-slate-800">
                             Modificar Información de Sucursal
                         </DialogTitle>
                     </DialogHeader>
 
-                    <div className="p-8 grid grid-cols-2 gap-6 bg-white text-slate-900">
-                        <div className="col-span-2 space-y-2 text-slate-900">
+                    <div className="p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 bg-white text-slate-900 overflow-y-auto">
+                        <div className="md:col-span-2 space-y-2 text-slate-900">
                             <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Nombre Comercial</Label>
                             <Input
                                 value={branchToEdit?.name ?? ""}
@@ -315,7 +315,7 @@ export function BranchManager({ branches: initialBranches = [], orgId }: { branc
                                 className="h-11 rounded-xl font-bold uppercase border-slate-200 bg-slate-50/50 shadow-none px-4 text-slate-900 focus-visible:ring-1 focus-visible:ring-indigo-500"
                             />
                         </div>
-                        <div className="col-span-2 space-y-2">
+                        <div className="md:col-span-2 space-y-2">
                             <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Dirección</Label>
                             <Input
                                 value={branchToEdit?.address ?? ""}
@@ -325,7 +325,7 @@ export function BranchManager({ branches: initialBranches = [], orgId }: { branc
                         </div>
                     </div>
 
-                    <DialogFooter className="p-6 bg-slate-50 border-t border-slate-100">
+                    <DialogFooter className="p-6 bg-slate-50 border-t border-slate-100 shrink-0 flex-row gap-3">
                         <Button
                             type="button"
                             variant="ghost"
@@ -348,7 +348,7 @@ export function BranchManager({ branches: initialBranches = [], orgId }: { branc
 
             {/* ALERTA ELIMINAR */}
             <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-                <AlertDialogContent className="rounded-[3rem] border-none p-0 overflow-hidden shadow-2xl">
+                <AlertDialogContent className="w-[95vw] sm:max-w-[440px] rounded-[3rem] border-none p-0 overflow-hidden shadow-2xl">
                     <div className="bg-red-50 p-10 flex flex-col items-center text-center">
                         <div className="w-20 h-20 bg-red-100 rounded-[2rem] flex items-center justify-center text-red-600 mb-6 shadow-inner animate-pulse">
                             <Trash2 size={32} />

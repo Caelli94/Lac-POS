@@ -35,7 +35,7 @@ export function LimitReachedModal({ isOpen, onClose, limitType = 'generic' }: Li
 
     return (
         <AlertDialog open={isOpen} onOpenChange={onClose}>
-            <AlertDialogContent className="border-red-100 bg-white">
+            <AlertDialogContent className="w-[95vw] sm:max-w-[450px] border-none bg-white rounded-[2.5rem] shadow-2xl p-8">
                 <AlertDialogHeader>
                     <div className="flex items-center gap-3 text-red-600 mb-2">
                         <ArrowUpCircle size={24} />
