@@ -14,6 +14,10 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { PrintLayout } from './print-layout';
 import { updateProductBarcodeAction } from '../new/actions';
+const getVariantKey = (v: any) => {
+    if (!v) return '';
+    return `${v._id || v.id || v.tempId || ''}-${v.size || ''}-${v.color || ''}`;
+};
 
 export default function LabelPrintingPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = use(params);
@@ -109,12 +113,12 @@ export default function LabelPrintingPage({ params }: { params: Promise<{ slug: 
             return;
         }
 
-        const uniqueId = variant ? `${product.id}-${variant._id || variant.id || variant.tempId}` : product.id;
+        const uniqueId = variant ? `${product.id}-${getVariantKey(variant)}` : product.id;
 
         setPrintQueue(prev => {
-            const existing = prev.find(item => (item.variant ? `${item.product.id}-${item.variant._id || item.variant.id || item.variant.tempId}` : item.product.id) === uniqueId);
+            const existing = prev.find(item => (item.variant ? `${item.product.id}-${getVariantKey(item.variant)}` : item.product.id) === uniqueId);
             if (existing) {
-                return prev.map(item => (item.variant ? `${item.product.id}-${item.variant._id || item.variant.id || item.variant.tempId}` : item.product.id) === uniqueId ? { ...item, quantity: item.quantity + 1 } : item);
+                return prev.map(item => (item.variant ? `${item.product.id}-${getVariantKey(item.variant)}` : item.product.id) === uniqueId ? { ...item, quantity: item.quantity + 1 } : item);
             }
             return [...prev, { product, variant, quantity: 1 }];
         });
@@ -147,8 +151,9 @@ export default function LabelPrintingPage({ params }: { params: Promise<{ slug: 
         let res;
         if (pendingProduct.variantSelected) {
             // It's a variant. We need to update the variant barcode in the product.
+            const targetKey = getVariantKey(pendingProduct.variantSelected);
             const updatedVariants = pendingProduct.variants.map((v: any) =>
-                (v._id || v.id || v.tempId) === (pendingProduct.variantSelected._id || pendingProduct.variantSelected.id || pendingProduct.variantSelected.tempId)
+                getVariantKey(v) === targetKey
                     ? { ...v, barcode: newCode }
                     : v
             );
@@ -183,7 +188,7 @@ export default function LabelPrintingPage({ params }: { params: Promise<{ slug: 
     const updateQuantity = (uniqueId: string, delta: number) => {
         setPrintQueue(prev => {
             return prev.map(item => {
-                const itemUniqueId = item.variant ? `${item.product.id}-${item.variant._id || item.variant.id || item.variant.tempId}` : item.product.id;
+                const itemUniqueId = item.variant ? `${item.product.id}-${getVariantKey(item.variant)}` : item.product.id;
                 if (itemUniqueId === uniqueId) {
                     const newQ = Math.max(1, item.quantity + delta);
                     return { ...item, quantity: newQ };
@@ -195,7 +200,7 @@ export default function LabelPrintingPage({ params }: { params: Promise<{ slug: 
 
     const removeFromQueue = (uniqueId: string) => {
         setPrintQueue(prev => prev.filter(item => {
-            const itemUniqueId = item.variant ? `${item.product.id}-${item.variant._id || item.variant.id || item.variant.tempId}` : item.product.id;
+            const itemUniqueId = item.variant ? `${item.product.id}-${getVariantKey(item.variant)}` : item.product.id;
             return itemUniqueId !== uniqueId;
         }));
     };
@@ -280,7 +285,7 @@ export default function LabelPrintingPage({ params }: { params: Promise<{ slug: 
                                                     {(() => {
                                                         const uniqueVariants = new Map();
                                                         p.variants.forEach((v: any, vIdx: number) => {
-                                                            const vKey = v._id || v.id || `temp-${vIdx}`;
+                                                            const vKey = getVariantKey(v);
                                                             if (!uniqueVariants.has(vKey)) uniqueVariants.set(vKey, v);
                                                         });
                                                         return Array.from(uniqueVariants.values()).map((v: any, vIdx: number) => (
@@ -331,7 +336,7 @@ export default function LabelPrintingPage({ params }: { params: Promise<{ slug: 
                                 ) : (
                                     <div className="divide-y divide-slate-100">
                                         {printQueue.map((item) => {
-                                            const uniqueId = item.variant ? `${item.product.id}-${item.variant._id || item.variant.id || item.variant.tempId}` : item.product.id;
+                                            const uniqueId = item.variant ? `${item.product.id}-${getVariantKey(item.variant)}` : item.product.id;
                                             return (
                                                 <div key={uniqueId} className="flex items-center p-4 bg-white hover:bg-slate-50/50 transition-colors gap-4">
                                                     <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center font-black text-slate-400 border border-slate-200 text-[10px]">

@@ -258,8 +258,8 @@ export function AgendaWidget({ orgId }: { orgId: string }) {
 
             {/* Create/Edit Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="w-[95vw] sm:max-w-[425px] rounded-[2rem] p-0 border-none shadow-2xl overflow-hidden bg-white z-[100] flex flex-col max-h-[95vh]">
-                    <DialogHeader className="p-6 md:p-8 bg-slate-50 border-b border-slate-100 shrink-0">
+                <DialogContent className="w-[95vw] sm:max-w-[425px] rounded-[2rem] p-0 border-none shadow-2xl bg-white z-50 flex flex-col max-h-[95vh]">
+                    <DialogHeader className="p-6 md:p-8 bg-slate-50 border-b border-slate-100 shrink-0 rounded-t-[2rem]">
                         <DialogTitle className="text-xl md:text-2xl font-black text-slate-900 uppercase tracking-tighter">
                             {editingTask ? 'Editar Tarea' : 'Nueva Tarea'}
                         </DialogTitle>
@@ -279,25 +279,30 @@ export function AgendaWidget({ orgId }: { orgId: string }) {
 
                         <div className="space-y-2 flex flex-col">
                             <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Fecha Programada</label>
-                            <Popover>
+                            <Popover modal={true}>
                                 <PopoverTrigger asChild>
-                                    <Button
-                                        variant={"outline"}
+                                    <div
+                                        role="button"
                                         className={cn(
-                                            "h-12 px-4 rounded-xl border-slate-200 bg-slate-50/50 hover:bg-white hover:border-indigo-200 text-left font-bold transition-all",
+                                            "h-12 px-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:border-indigo-200 text-left font-bold transition-all flex items-center cursor-pointer",
                                             !newTaskDate && "text-muted-foreground"
                                         )}
                                     >
                                         <CalendarIcon className="mr-2 h-4 w-4 text-indigo-600" />
                                         {newTaskDate ? format(newTaskDate, "PPP", { locale: es }) : <span>Selecciona una fecha</span>}
-                                    </Button>
+                                    </div>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0 border-none shadow-2xl rounded-[1.5rem] overflow-hidden" align="start">
+                                <PopoverContent 
+                                    className="w-auto p-0 border-none shadow-2xl rounded-[1.5rem] overflow-hidden z-[9999]" 
+                                    align="start"
+                                    onOpenAutoFocus={(e) => e.preventDefault()}
+                                >
                                     <Calendar
                                         mode="single"
                                         selected={newTaskDate}
                                         onSelect={setNewTaskDate}
                                         locale={es}
+                                        disabled={{ before: new Date() }}
                                         className="rounded-[1.5rem] border border-slate-100 bg-white"
                                     />
                                 </PopoverContent>
@@ -315,7 +320,7 @@ export function AgendaWidget({ orgId }: { orgId: string }) {
                         </div>
                     </div>
 
-                    <DialogFooter className="p-6 md:p-8 bg-slate-50 border-t border-slate-100 shrink-0 gap-3 flex-row">
+                    <DialogFooter className="p-6 md:p-8 bg-slate-50 border-t border-slate-100 shrink-0 gap-3 flex-row rounded-b-[2rem]">
                         <Button
                             variant="ghost"
                             onClick={() => setIsDialogOpen(false)}
