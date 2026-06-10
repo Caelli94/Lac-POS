@@ -5,6 +5,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
 import { SessionMonitor } from "@/components/SessionMonitor";
 import { AIChatWidget } from "@/components/AIChatWidget";
+import { NavigationCursorLoader } from "@/components/NavigationCursorLoader";
+import { Suspense } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,6 +40,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <SessionMonitor />
+          <Suspense fallback={null}>
+            <NavigationCursorLoader />
+          </Suspense>
           {children}
           <AIChatWidget />
           <Toaster position="top-right" richColors />
