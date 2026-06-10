@@ -132,8 +132,11 @@ export function ProductTableManager({ initialProducts, categories, suppliers, sl
 
     const uniqueBranches = useMemo(() => {
         const seen = new Set();
-        return (branches || []).filter((b: any) => {
-            const id = b.id || b._id;
+        return (branches || []).map((b: any) => ({
+            ...b,
+            id: b.id || b._id?.toString() || b._id
+        })).filter((b: any) => {
+            const id = b.id;
             if (!id || seen.has(id)) return false;
             seen.add(id);
             return true;

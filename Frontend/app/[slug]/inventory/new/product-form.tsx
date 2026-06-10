@@ -85,8 +85,11 @@ export function ProductForm({ initialData, isEditMode, orgId, slug, categories, 
 
     const uniqueBranches = useMemo(() => {
         const seen = new Set();
-        return (initialBranches || []).filter((b: any) => {
-            const id = b.id || b._id;
+        return (initialBranches || []).map((b: any) => ({
+            ...b,
+            id: b.id || b._id?.toString() || b._id
+        })).filter((b: any) => {
+            const id = b.id;
             if (!id || seen.has(id)) return false;
             seen.add(id);
             return true;
@@ -108,7 +111,12 @@ export function ProductForm({ initialData, isEditMode, orgId, slug, categories, 
     const [imagePreview, setImagePreview] = useState<string | null>(initialData?.image_url || null)
     const [isPricingModalOpen, setIsPricingModalOpen] = useState(false)
     const [lists, setLists] = useState<any[]>(uniqueLists)
-    const [branches, setBranches] = useState<any[]>(uniqueBranches)
+    const [branches, setBranches] = useState<any[]>(() => {
+        if (uniqueBranches.length === 0) {
+            return [{ id: 'default', name: 'PRINCIPAL' }]
+        }
+        return uniqueBranches
+    })
     const [priceChanged, setPriceChanged] = useState(false)
 
     // Selectors State
@@ -254,7 +262,17 @@ export function ProductForm({ initialData, isEditMode, orgId, slug, categories, 
     // Fetch if missing (fallback)
     useEffect(() => {
         if (lists.length === 0) getPriceListsAction(orgId).then(res => { if (res.success) setLists(res.data || []) })
-        if (branches.length === 0) getBranchesAction(orgId).then(res => { if (res.success) setBranches(res.data || []) })
+        if (branches.length === 0 || (branches.length === 1 && branches[0].id === 'default')) {
+            getBranchesAction(orgId).then(res => {
+                if (res.success && res.data && res.data.length > 0) {
+                    const mapped = res.data.map((b: any) => ({
+                        ...b,
+                        id: b.id || b._id?.toString() || b._id
+                    }));
+                    setBranches(mapped);
+                }
+            })
+        }
 
         if (isEditMode && initialData?.id) {
             setLoadingLots(true);
@@ -362,9 +380,12 @@ export function ProductForm({ initialData, isEditMode, orgId, slug, categories, 
 
     const handleBranchStockChange = (vIndex: number, branchId: string, value: string) => {
         const newVariants = [...formData.variants]
-        const val = parseInt(value) || 0
+        const val = value === '' || value === '-' ? value : (parseInt(value) || 0)
         newVariants[vIndex].branch_stocks = { ...newVariants[vIndex].branch_stocks, [branchId]: val }
-        newVariants[vIndex].stock = Object.values(newVariants[vIndex].branch_stocks).reduce((a: any, b: any) => a + b, 0)
+        newVariants[vIndex].stock = Object.values(newVariants[vIndex].branch_stocks).reduce((a: any, b: any) => {
+            const numericVal = typeof b === 'string' ? (parseInt(b) || 0) : b
+            return a + numericVal
+        }, 0)
         setFormData(p => ({ ...p, variants: newVariants }))
     }
 
@@ -945,7 +966,7 @@ export function ProductForm({ initialData, isEditMode, orgId, slug, categories, 
                                         )}
                                     </div>
                                 ) : (
-                                    /* STOCK SIMPLE POR SUCURSAL */
+                                    /* STOCK ESTÁNDAR (SIN LOTES) */
                                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                                         {branches.map(branch => (
                                             <div key={branch.id} className="bg-slate-50/50 p-3 rounded-2xl border border-slate-100 hover:bg-white transition-all shadow-sm">
@@ -954,9 +975,12 @@ export function ProductForm({ initialData, isEditMode, orgId, slug, categories, 
                                                     type="number"
                                                     value={formData.branch_stocks?.[branch.id] || ''}
                                                     onChange={(e) => {
-                                                        const val = parseInt(e.target.value) || 0
+                                                        const val = e.target.value === '' || e.target.value === '-' ? e.target.value : (parseInt(e.target.value) || 0)
                                                         const newStocks = { ...formData.branch_stocks, [branch.id]: val }
-                                                        const totalStock = Object.values(newStocks).reduce((a: any, b: any) => a + Number(b), 0)
+                                                        const totalStock = Object.values(newStocks).reduce((a: any, b: any) => {
+                                                            const numericVal = typeof b === 'string' ? (parseInt(b) || 0) : b
+                                                            return a + numericVal
+                                                        }, 0)
                                                         setFormData(p => ({ ...p, branch_stocks: newStocks, stock: totalStock }))
                                                     }}
                                                     className="h-9 text-xs font-bold text-center bg-white border-slate-100 focus:border-blue-400"
